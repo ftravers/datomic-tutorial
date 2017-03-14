@@ -247,3 +247,73 @@ Here is a  complete query, for all entities that have the
 #+END_SRC
 
 GIT TAG: first-query
+
+Now when you run this query, you get a weird beast back:
+
+#+BEGIN_SRC clojure
+datomic-tutorial.core> (query1)
+#{[17592186045418] [17592186045419]}
+#+END_SRC
+
+So this is a set of vectors with one ~:db/id~ in each vector.  This
+isn't the most intuitive or user friendly representation, so lets
+improve upon this.
+
+** Pull Syntax
+
+Instead of the line:
+
+#+BEGIN_SRC clojure
+:find ?e
+#+END_SRC
+
+we can convert that into pull syntax like so:
+
+#+BEGIN_SRC clojure
+:find (pull ?e [:user/email :user/age])
+#+END_SRC
+
+and our output will now look like:
+
+#+BEGIN_SRC clojure
+datomic-tutorial.core> (query1)
+[[#:user{:email "sally.jones@gmail.com", :age 34}]
+ [#:user{:email "franklin.rosevelt@gmail.com", :age 14}]]
+#+END_SRC
+
+Okay, that looks a lot nicer!
+
+Now we still need to modify this query to only return people who are
+21 and over.  Franklin, you aren't allowed to drink!
+
+To get this we set our ~:where~ clauses like so:
+
+#+BEGIN_SRC clojure
+  [?e :user/age ?age]
+  [(>= ?age 21)]
+#+END_SRC
+
+So this reads: "give me all the entities who have the field
+~:user/age~ and store the age into the variable ~?age~".  The second
+clause reads: "run the ~>=~ function on the variable ?age and the
+number 21, and if this returns ~true~, keep this entity, otherwise
+discard it.
+
+So here is the full new query:
+
+#+BEGIN_SRC clojure
+(defn query1 []
+  (d/q '[:find (pull ?e [:user/email :user/age])
+         :where
+         [?e :user/age ?age]
+         [(>= ?age 21)]]
+       (d/db @db-conn)))
+#+END_SRC
+
+And now we get the desired result:
+
+#+BEGIN_SRC clojure
+datomic-tutorial.core> (query1)
+[[#:user{:email "sally.jones@gmail.com", :age 34}]]
+#+END_SRC
+

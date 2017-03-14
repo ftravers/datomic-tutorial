@@ -10,7 +10,13 @@
 <li><a href="#sec-1-4">1.4. Testdata</a></li>
 <li><a href="#sec-1-5">1.5. Blow away and recreate DB</a></li>
 <li><a href="#sec-1-6">1.6. Better Testdata</a></li>
-<li><a href="#sec-1-7">1.7. Query the database</a></li>
+</ul>
+</li>
+<li><a href="#sec-2">2. Query the database</a>
+<ul>
+<li><a href="#sec-2-1">2.1. Concept</a></li>
+<li><a href="#sec-2-2">2.2. Breaking down the datomic query</a></li>
+<li><a href="#sec-2-3">2.3. Pull Syntax</a></li>
 </ul>
 </li>
 </ul>
@@ -126,6 +132,10 @@ I know I'm starting with a clean slate each time.
 Here I blow it away, recreate a blank DB, recreate the connection,
 transact the schema and testdata.
 
+Working code can be found under the 
+
+GIT TAG: basic-schema-insert
+
 ## Better Testdata<a id="sec-1-6" name="sec-1-6"></a>
 
 Okay a DB with only one record in it is pretty boring.  Also a db with
@@ -161,9 +171,127 @@ lets add some actual data:
         :user/email "franklin.rosevelt@gmail.com"
         :user/age 14}])
 
+GIT TAG: better-testdata
+
 Notice we need to specify a unique number for each entity in our
 batch, so franklin's temp `:db/id` is -2, while sally's is -1.
 
 **REMEMBER** to transact this schema and testdata into your cleaned up DB!
 
-## Query the database<a id="sec-1-7" name="sec-1-7"></a>
+# Query the database<a id="sec-2" name="sec-2"></a>
+
+## Concept<a id="sec-2-1" name="sec-2-1"></a>
+
+Now we have seen how to add data to datomic, the interesting part is
+the querying of the data.  A query might be: "Give me the users who
+are over 21", if you are making an app to see who is legal to drink
+in the United States, for example.
+
+In regular RDBMS we compare rows of tables based on the values in a
+given column.  A similar SQL query might look like:
+
+    SELECT user-email FROM users WHERE user-age > 21
+
+In datomic we dont have tables, just a giant vector of maps.  So we
+dont have a `FROM` clause.  In our case we are inspecting the
+`:user/age` field, so ANY entity (map), which has that field will be
+included in our query.  This is a very important idea which we will
+revist later to re-inforce.
+
+## Breaking down the datomic query<a id="sec-2-2" name="sec-2-2"></a>
+
+A query takes datalog for its first argument and a database to execute
+that datalog on as the second argument.  Lets look at some datalog
+first:
+
+    [:find ?e
+     :where [?e :user/email _]]
+
+Datalog is the query language to extract entities from datomic.  The
+basic shape of a query is:
+
+    [entity-id field-name field-value]
+
+The `?e` basically means we aren't specifying a specific entity id, so
+just fill this in with what entity ids you find.  Next we specify an
+actual field name, `:user/email`.  So this is like a constant, whereas
+`?e` is like a variable.  Finally, the underscore in the field-value
+position, basically says, the field value can be anything, we aren't
+constraining it.  The `:user/email` part of the query restricts the
+entities to only entities that have that field.
+
+When we run this query which basically reads: "Get us all the entities
+that have the field: `:user/email`.  In datomic speak, they call these
+attributes.  So they would label their query like:
+
+    [entity attribute value]
+
+Now say we wanted just the entities whose email exactly equaled
+`sally.jones@gmail.com`, our query would look like:
+
+    [?e :user/email "sally.jones@gmail.com"]
+
+Here is a  complete query, for all entities that have the
+`:user/email` field.  Which in our case will be both entities.
+
+    (defn query1 []
+      (d/q '[:find ?e
+             :where [?e :user/email _]]
+           (d/db @db-conn)))
+
+GIT TAG: first-query
+
+Now when you run this query, you get a weird beast back:
+
+    datomic-tutorial.core> (query1)
+    #{[17592186045418] [17592186045419]}
+
+So this is a set of vectors with one `:db/id` in each vector.  This
+isn't the most intuitive or user friendly representation, so lets
+improve upon this.
+
+## Pull Syntax<a id="sec-2-3" name="sec-2-3"></a>
+
+Instead of the line:
+
+    :find ?e
+
+we can convert that into pull syntax like so:
+
+    :find (pull ?e [:user/email :user/age])
+
+and our output will now look like:
+
+    datomic-tutorial.core> (query1)
+    [[#:user{:email "sally.jones@gmail.com", :age 34}]
+     [#:user{:email "franklin.rosevelt@gmail.com", :age 14}]]
+
+Okay, that looks a lot nicer!
+
+Now we still need to modify this query to only return people who are
+21 and over.  Franklin, you aren't allowed to drink!
+
+To get this we set our `:where` clauses like so:
+
+    [?e :user/age ?age]
+    [(>= ?age 21)]
+
+So this reads: "give me all the entities who have the field
+`:user/age` and store the age into the variable `?age`".  The second
+clause reads: "run the `>=` function on the variable ?age and the
+number 21, and if this returns `true`, keep this entity, otherwise
+discard it.
+
+So here is the full new query:
+
+    (defn query1 []
+      (d/q '[:find (pull ?e [:user/email :user/age])
+             :where
+             [?e :user/age ?age]
+             [(>= ?age 21)]]
+           (d/db @db-conn)))
+
+And now we get the desired result:
+
+    datomic-tutorial.core> (query1)
+    [[#:user{:email "sally.jones@gmail.com", :age 34}]]
