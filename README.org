@@ -167,4 +167,29 @@ batch, so franklin's temp ~:db/id~ is -2, while sally's is -1.
 
 *REMEMBER* to transact this schema and testdata into your cleaned up DB!
 
-** Query the database
+* Query the database
+
+** Concept
+
+Now we have seen how to add data to datomic, the interesting part is
+the querying of the data.  A query might be: "Give me the users who
+are over 21", if you are making an app to see who is legal to drink
+in the United States, for example.
+
+In regular RDBMS we compare rows of tables based on the values in a
+given column.  A similar SQL query might look like:
+
+#+BEGIN_SRC sql
+SELECT user-email FROM users WHERE user-age > 21
+#+END_SRC
+
+In datomic we dont have tables, just a giant vector of maps.  So we
+dont have a ~FROM~ clause.  In our case we are inspecting the
+~:user/age~ field, so ANY entity (map), which has that field will be
+included in our query.  This is a very important idea which we will
+revist later to re-inforce.
+
+** Breaking down the datomic query
+
+The way this datomic query might look like is a bit like the
+following.  First we specify the field we care about
