@@ -206,7 +206,7 @@ first:
    :where [?e :user/email]]
 #+END_SRC
 
-GIT TAG: 
+
 
 Datalog is the query language to extract entities from datomic.  We
 have two parts to the datalog, the ~:find~ part and the ~:where~ part.
@@ -250,7 +250,7 @@ Here is a  complete query, for all entities that have the
 #+BEGIN_SRC clojure
 (defn query1 []
   (d/q '[:find ?e
-         :where [?e :user/email _]]
+         :where [?e :user/email]]
        (d/db @db-conn)))
 #+END_SRC
 
