@@ -197,5 +197,53 @@ revist later to re-inforce.
 
 ** Breaking down the datomic query
 
-The way this datomic query might look like is a bit like the
-following.  First we specify the field we care about
+A query takes datalog for its first argument and a database to execute
+that datalog on as the second argument.  Lets look at some datalog
+first:
+
+#+BEGIN_SRC clojure
+  [:find ?e
+   :where [?e :user/email _]]
+#+END_SRC
+
+Datalog is the query language to extract entities from datomic.  The
+basic shape of a query is:
+
+#+BEGIN_SRC clojure
+[entity-id field-name field-value]
+#+END_SRC
+
+The ~?e~ basically means we aren't specifying a specific entity id, so
+just fill this in with what entity ids you find.  Next we specify an
+actual field name, ~:user/email~.  So this is like a constant, whereas
+~?e~ is like a variable.  Finally, the underscore in the field-value
+position, basically says, the field value can be anything, we aren't
+constraining it.  The ~:user/email~ part of the query restricts the
+entities to only entities that have that field.
+
+When we run this query which basically reads: "Get us all the entities
+that have the field: ~:user/email~.  In datomic speak, they call these
+attributes.  So they would label their query like:
+
+#+BEGIN_SRC clojure
+[entity attribute value]
+#+END_SRC
+
+Now say we wanted just the entities whose email exactly equaled
+~sally.jones@gmail.com~, our query would look like:
+
+#+BEGIN_SRC clojure
+[?e :user/email "sally.jones@gmail.com"]
+#+END_SRC
+
+Here is a  complete query, for all entities that have the
+~:user/email~ field.  Which in our case will be both entities.
+
+#+BEGIN_SRC clojure
+(defn query1 []
+  (d/q '[:find ?e
+         :where [?e :user/email _]]
+       (d/db @db-conn)))
+#+END_SRC
+
+GIT TAG: first-query
