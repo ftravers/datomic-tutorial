@@ -295,3 +295,5 @@ And now we get the desired result:
 
     datomic-tutorial.core> (query1)
     [[#:user{:email "sally.jones@gmail.com", :age 34}]]
+
+GIT TAG: query-pull-filter
