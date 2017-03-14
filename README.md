@@ -57,13 +57,16 @@ As we can see in the above example, the `:cars` field of the user
 
 The keywords that our maps use are not just hodge-podge, willy-nilly,
 used.  Rather we have to specify ahead of time the set of fields that
-maps can have/use.  This is called creating a schema.  A schema in
-regular relational database (RDBMS) means specifying tables and columns.  In
-datomic, we ONLY specify 'columns', or the entire set of allowed
-keywords.  Just like in an RDBMS, when we specify a column, we
-indicate the type of data that will live in that field.  We might
-setup a column to be a foriegn key (reference/link) to the primary key
-of another table.  Thats how you link rows together.
+maps are allowed to use.  This is called creating a schema.  
+
+A schema in regular relational database (RDBMS) means specifying
+tables and columns.  In datomic, we ONLY specify 'columns', or the
+entire set of allowed keywords.  
+
+Just like in an RDBMS, when we specify a column, we indicate the type
+of data that will live in that field.  We might setup a column to be a
+foriegn key (reference/link) to the primary key of another table.
+Thats how you link rows together.
 
 So lets take a break from concepts and see how to connect to a
 database quickly.
