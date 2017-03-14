@@ -224,7 +224,8 @@ specific entity id, so just fill this in with whatever entity ids you
 find.  Next we specify an actual field name, `:user/email`.  So this
 is like a constant, whereas `?e` is like a variable.  This means
 restrict the entities to ones who actually have the field:
-`:user/email`.  
+`:user/email`.  Finally we dont specify a field-value, so it can be
+any value.
 
 This query reads like: "Get us all the entities that have the field:
 `:user/email`.  In datomic speak, they call these attributes.  So they
