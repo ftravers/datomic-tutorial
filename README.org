@@ -227,9 +227,9 @@ is like a constant, whereas ~?e~ is like a variable.  This means
 restrict the entities to ones who actually have the field:
 ~:user/email~.  
 
-When we run this query which basically reads: "Get us all the entities
-that have the field: ~:user/email~.  In datomic speak, they call these
-attributes.  So they would label their query like:
+This query reads like: "Get us all the entities that have the field:
+~:user/email~.  In datomic speak, they call these attributes.  So they
+would label their query like:
 
 #+BEGIN_SRC clojure
 [entity attribute value]
