@@ -98,6 +98,12 @@ is the way we do this.  The -1 could be any negative number, and is
 like our fake temporary id.  Datomic will, upon inserting this record
 (entity/map), create the real permanent datomic id, ~:db/id~.
 
+Lets transact this data into the DB:
+
+#+BEGIN_SRC clojure
+(d/transact @db-conn test-data)
+#+END_SRC
+
 ** Blow away and recreate DB
 
 When experimenting with datomic, I like to blow the database away, so

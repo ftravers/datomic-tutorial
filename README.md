@@ -103,6 +103,10 @@ is the way we do this.  The -1 could be any negative number, and is
 like our fake temporary id.  Datomic will, upon inserting this record
 (entity/map), create the real permanent datomic id, `:db/id`.
 
+Lets transact this data into the DB:
+
+    (d/transact @db-conn test-data)
+
 ## Blow away and recreate DB<a id="sec-1-5" name="sec-1-5"></a>
 
 When experimenting with datomic, I like to blow the database away, so
