@@ -209,11 +209,11 @@ first:
 
 Datalog is the query language to extract entities from datomic.  We
 have two parts to the datalog, the `:find` part and the `:where` part.
-The query part selects (narrows down) the records (entities).  This is
-truely the querying part.  So this corresponds to the `WHERE` clause
-in SQL. The `:find` part, is basically what to show from the found
-records.  So this naturally corresponds to the `SELECT` part of sql.
-Lets focus on the `:where` part first.
+The query (`:where`) part selects (narrows down) the records
+(entities).  This is truely the querying part.  So this corresponds to
+the `WHERE` clause in SQL. The `:find` part, is basically what to show
+from the found records.  So this naturally corresponds to the `SELECT`
+part of sql.  Lets focus on the `:where` part first.
 
 Where clauses take one or more vector clauses that are of the form:
 
