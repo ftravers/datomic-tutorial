@@ -9,6 +9,8 @@
 <li><a href="#sec-1-3">1.3. Basic Schema</a></li>
 <li><a href="#sec-1-4">1.4. Testdata</a></li>
 <li><a href="#sec-1-5">1.5. Blow away and recreate DB</a></li>
+<li><a href="#sec-1-6">1.6. Better Testdata</a></li>
+<li><a href="#sec-1-7">1.7. Query the database</a></li>
 </ul>
 </li>
 </ul>
@@ -120,3 +122,45 @@ I know I'm starting with a clean slate each time.
 
 Here I blow it away, recreate a blank DB, recreate the connection,
 transact the schema and testdata.
+
+## Better Testdata<a id="sec-1-6" name="sec-1-6"></a>
+
+Okay a DB with only one record in it is pretty boring.  Also a db with
+only one column (field), that can't be compared, email, is very
+boring.  Lets create a DB with two entities (records/maps) in it.
+Lets have those entities have both email and age fields.
+
+The schema
+
+    (def schema [{:db/doc "A users email."
+                  :db/id #db/id[:db.part/db]
+                  :db/ident :user/email
+                  :db/valueType :db.type/string
+                  :db/cardinality :db.cardinality/one
+                  :db.install/_attribute :db.part/db}
+    
+                 {:db/doc "A users age."
+                  :db/id #db/id[:db.part/db]
+                  :db/ident :user/age
+                  :db/valueType :db.type/long
+                  :db/cardinality :db.cardinality/one
+                  :db.install/_attribute :db.part/db}])
+
+So we've added another field, age, that is type: `:db.type/long`.  Now
+lets add some actual data:
+
+    (def test-data
+      [{:db/id #db/id[:db.part/user -1]
+        :user/email "sally.jones@gmail.com"
+        :user/age 34}
+    
+       {:db/id #db/id[:db.part/user -2]
+        :user/email "franklin.rosevelt@gmail.com"
+        :user/age 14}])
+
+Notice we need to specify a unique number for each entity in our
+batch, so franklin's temp `:db/id` is -2, while sally's is -1.
+
+**REMEMBER** to transact this schema and testdata into your cleaned up DB!
+
+## Query the database<a id="sec-1-7" name="sec-1-7"></a>
