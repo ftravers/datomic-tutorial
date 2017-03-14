@@ -10,11 +10,23 @@
               :db/ident :user/email
               :db/valueType :db.type/string
               :db/cardinality :db.cardinality/one
+              :db.install/_attribute :db.part/db}
+
+             {:db/doc "A users age."
+              :db/id #db/id[:db.part/db]
+              :db/ident :user/age
+              :db/valueType :db.type/long
+              :db/cardinality :db.cardinality/one
               :db.install/_attribute :db.part/db}])
 
 (def test-data
   [{:db/id #db/id[:db.part/user -1]
-    :user/email "fenton.travers@gmail.com"}])
+    :user/email "sally.jones@gmail.com"
+    :user/age 34}
+
+   {:db/id #db/id[:db.part/user -2]
+    :user/email "franklin.rosevelt@gmail.com"
+    :user/age 14}])
 
 (defn reload-dbs []
   (d/delete-database db-url)

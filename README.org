@@ -123,6 +123,10 @@ I know I'm starting with a clean slate each time.
 Here I blow it away, recreate a blank DB, recreate the connection,
 transact the schema and testdata.
 
+Working code can be found under the 
+
+GIT TAG: basic-schema-insert
+
 ** Better Testdata
 
 Okay a DB with only one record in it is pretty boring.  Also a db with
@@ -152,15 +156,17 @@ So we've added another field, age, that is type: ~:db.type/long~.  Now
 lets add some actual data:
 
 #+BEGIN_SRC clojure
-    (def test-data
-      [{:db/id #db/id[:db.part/user -1]
-        :user/email "sally.jones@gmail.com"
-        :user/age 34}
+  (def test-data
+    [{:db/id #db/id[:db.part/user -1]
+      :user/email "sally.jones@gmail.com"
+      :user/age 34}
 
-       {:db/id #db/id[:db.part/user -2]
-        :user/email "franklin.rosevelt@gmail.com"
-        :user/age 14}])
+     {:db/id #db/id[:db.part/user -2]
+      :user/email "franklin.rosevelt@gmail.com"
+      :user/age 14}])
 #+END_SRC
+
+GIT TAG: better-testdata
 
 Notice we need to specify a unique number for each entity in our
 batch, so franklin's temp ~:db/id~ is -2, while sally's is -1.
