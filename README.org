@@ -254,7 +254,7 @@ Here is a  complete query, for all entities that have the
        (d/db @db-conn)))
 #+END_SRC
 
-GIT TAG: first-query
+GIT TAG: simple-first-query
 
 Now when you run this query, you get a weird beast back:
 
