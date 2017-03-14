@@ -205,20 +205,26 @@ that datalog on as the second argument.  Lets look at some datalog
 first:
 
     [:find ?e
-     :where [?e :user/email _]]
+     :where [?e :user/email]]
 
-Datalog is the query language to extract entities from datomic.  The
-basic shape of a query is:
+Datalog is the query language to extract entities from datomic.  We
+have two parts to the datalog, the `:find` part and the `:where` part.
+The query part selects (narrows down) the records (entities).  This is
+truely the querying part.  So this corresponds to the `WHERE` clause
+in SQL. The `:find` part, is basically what to show from the found
+records.  So this naturally corresponds to the `SELECT` part of sql.
+Lets focus on the `:where` part first.
+
+Where clauses take one or more vector clauses that are of the form:
 
     [entity-id field-name field-value]
 
-The `?e` basically means we aren't specifying a specific entity id, so
-just fill this in with what entity ids you find.  Next we specify an
-actual field name, `:user/email`.  So this is like a constant, whereas
-`?e` is like a variable.  Finally, the underscore in the field-value
-position, basically says, the field value can be anything, we aren't
-constraining it.  The `:user/email` part of the query restricts the
-entities to only entities that have that field.
+In our example the `?e` basically means we aren't specifying a
+specific entity id, so just fill this in with whatever entity ids you
+find.  Next we specify an actual field name, `:user/email`.  So this
+is like a constant, whereas `?e` is like a variable.  This means
+restrict the entities to ones who actually have the field:
+`:user/email`.  
 
 When we run this query which basically reads: "Get us all the entities
 that have the field: `:user/email`.  In datomic speak, they call these
@@ -236,10 +242,10 @@ Here is a  complete query, for all entities that have the
 
     (defn query1 []
       (d/q '[:find ?e
-             :where [?e :user/email _]]
+             :where [?e :user/email]]
            (d/db @db-conn)))
 
-GIT TAG: first-query
+GIT TAG: simple-first-query
 
 Now when you run this query, you get a weird beast back:
 
