@@ -30,7 +30,7 @@
 Datomic allows clojure programmers to work with data in the structures
 they are comfortable with, maps and vectors.  The way to think about
 datomic is that it is one giant vector of maps.  Each map in this
-vector is what they call and *Entity*.  So lets draw this out with an
+vector is what they call an *Entity*.  So lets draw this out with an
 example: 
 
     [{:db/id 1
