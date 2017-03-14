@@ -317,3 +317,4 @@ datomic-tutorial.core> (query1)
 [[#:user{:email "sally.jones@gmail.com", :age 34}]]
 #+END_SRC
 
+GIT TAG: query-pull-filter
