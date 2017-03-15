@@ -19,6 +19,7 @@
 <li><a href="#sec-2-3">2.3. Pull Syntax</a></li>
 </ul>
 </li>
+<li><a href="#sec-3">3. Parent Child Data</a></li>
 </ul>
 </div>
 </div>
@@ -228,8 +229,11 @@ restrict the entities to ones who actually have the field:
 any value.
 
 This query reads like: "Get us all the entities that have the field:
-`:user/email`.  In datomic speak, they call these attributes.  So they
-would label their query like:
+`:user/email`.  
+
+In datomic speak, they call field-names, **attributes**, and
+field-values, simply **values**.  So you will see them refer to query
+clauses like so:q
 
     [entity attribute value]
 
@@ -304,3 +308,70 @@ And now we get the desired result:
     [[#:user{:email "sally.jones@gmail.com", :age 34}]]
 
 GIT TAG: query-pull-filter
+
+# Parent Child Data<a id="sec-3" name="sec-3"></a>
+
+Often we have data that owns other data.  For example our first
+example looked like this:
+
+    [{:db/id 1
+      :car/make "toyota"
+      :car/model "tacoma"
+      :year 2014}
+    
+     {:db/id 2
+      :car/make "BMW"
+      :car/model "325xi"
+      :year 2001}
+    
+     {:db/id 3
+      :user/name "ftravers"
+      :user/age 54
+      :cars [{:db/id 1}
+             {:db/id 2}]}]
+
+So how do we model this?  First we start with the schema.  We'll need
+the fields: `:car/make`, `:car/model`, `:year`, `:user/name`, `:user/age`,
+and `:cars`. 
+
+`:car/make`, `:car/model`, and `:user/name` are all of type `string` and
+cardinality one.  That is dont have a list of makes, models, or names,
+they are single valued. For `:year` and `:user/age` we can use
+integers.  `:cars` is the new one.  It's cardinality will be type
+`many` also the type that it will hold will be of type `reference`,
+since they refer to other entities.  Lets look only at the schema for
+`:cars`, the others you should be able to piece together from previous
+schema examples, or just look at the 
+
+GIT TAG: parent-child-modelling
+
+For `:cars`, the schema will look like:
+
+    {:db/doc "List of cars a user owns"
+        :db/id #db/id[:db.part/db]
+        :db/ident :cars
+        :db/valueType :db.type/ref
+        :db/cardinality :db.cardinality/many
+        :db.install/_attribute :db.part/db}
+
+You can see the values for `cardinality` and `valueType` that we've
+used. 
+
+Here is some testdata:
+
+    (def test-data
+      [{:db/id #db/id[:db.part/user -1]
+        :car/make "toyota"
+        :car/model "tacoma"
+        :year 2014}
+    
+       {:db/id #db/id[:db.part/user -2]
+        :car/make "BMW"
+        :car/model "325xi"
+        :year 2001}
+    
+       {:db/id #db/id[:db.part/user -3]
+        :user/name "ftravers"
+        :user/age 54
+        :cars [{:db/id #db/id[:db.part/user -1]}
+               {:db/id #db/id[:db.part/user -2]}]}])
