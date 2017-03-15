@@ -320,6 +320,9 @@ So here is the full new query:
        (d/db @db-conn)))
 #+END_SRC
 
+The where clauses are *AND*ed together, so both must be true in order
+for the entity to be included in the search results.
+
 And now we get the desired result:
 
 #+BEGIN_SRC clojure
@@ -407,3 +410,55 @@ Here is some testdata:
 #+END_SRC
 
 GIT TAG: parent-child-modeling
+
+So now we've stuffed some parent child data into the db, lets see how
+to get it out in a nice way.
+
+** Querying Parent Child Data
+
+So first of all we'll just find the record we care about, a where
+clause that looks like:
+
+#+BEGIN_SRC clojure
+[?e :user/name "ftravers"]
+#+END_SRC
+
+is sufficient to find that entity.  Now lets do some magic with the
+pull syntax to get the data how we want it.
+
+** Parent Child Pull Syntax
+
+We have already learned how to dispay entity fields.
+
+#+BEGIN_SRC clojure
+(pull ?e [:user/name :user/age])
+#+END_SRC
+
+will spit out data like:
+
+#+BEGIN_SRC clojure
+datomic-tutorial.core> (query1)
+[[#:user{:name "ftravers", :age 54}]]
+#+END_SRC
+
+but what we really want is something that looks like:
+
+#+BEGIN_SRC clojure
+datomic-tutorial.core> (query1)
+[[{:user/name "ftravers",
+   :user/age 54,
+   :cars
+   [#:car{:make "toyota", :model "tacoma"}
+    #:car{:make "BMW", :model "325xi"}]}]]
+#+END_SRC
+
+To get the above we change the query to look like:
+
+#+BEGIN_SRC clojure
+  (pull ?e
+        [:user/name
+         :user/age
+         {:cars [:car/make :car/model]}])
+#+END_SRC
+
+So for the children, you start a new map, whose key

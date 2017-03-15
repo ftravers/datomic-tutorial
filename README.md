@@ -19,7 +19,14 @@
 <li><a href="#sec-2-3">2.3. Pull Syntax</a></li>
 </ul>
 </li>
-<li><a href="#sec-3">3. Parent Child Data</a></li>
+<li><a href="#sec-3">3. Parent Child Data</a>
+<ul>
+<li><a href="#sec-3-1">3.1. Many Refs Schema</a></li>
+<li><a href="#sec-3-2">3.2. Testdata</a></li>
+<li><a href="#sec-3-3">3.3. Querying Parent Child Data</a></li>
+<li><a href="#sec-3-4">3.4. Parent Child Pull Syntax</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -302,6 +309,9 @@ So here is the full new query:
              [(>= ?age 21)]]
            (d/db @db-conn)))
 
+The where clauses are \*AND\*ed together, so both must be true in order
+for the entity to be included in the search results.
+
 And now we get the desired result:
 
     datomic-tutorial.core> (query1)
@@ -343,7 +353,9 @@ since they refer to other entities.  Lets look only at the schema for
 `:cars`, the others you should be able to piece together from previous
 schema examples, or just look at the 
 
-GIT TAG: parent-child-modelling
+GIT TAG: parent-child-modeling
+
+## Many Refs Schema<a id="sec-3-1" name="sec-3-1"></a>
 
 For `:cars`, the schema will look like:
 
@@ -356,6 +368,8 @@ For `:cars`, the schema will look like:
 
 You can see the values for `cardinality` and `valueType` that we've
 used. 
+
+## Testdata<a id="sec-3-2" name="sec-3-2"></a>
 
 Here is some testdata:
 
@@ -375,3 +389,47 @@ Here is some testdata:
         :user/age 54
         :cars [{:db/id #db/id[:db.part/user -1]}
                {:db/id #db/id[:db.part/user -2]}]}])
+
+GIT TAG: parent-child-modeling
+
+So now we've stuffed some parent child data into the db, lets see how
+to get it out in a nice way.
+
+## Querying Parent Child Data<a id="sec-3-3" name="sec-3-3"></a>
+
+So first of all we'll just find the record we care about, a where
+clause that looks like:
+
+    [?e :user/name "ftravers"]
+
+is sufficient to find that entity.  Now lets do some magic with the
+pull syntax to get the data how we want it.
+
+## Parent Child Pull Syntax<a id="sec-3-4" name="sec-3-4"></a>
+
+We have already learned how to dispay entity fields.
+
+    (pull ?e [:user/name :user/age])
+
+will spit out data like:
+
+    datomic-tutorial.core> (query1)
+    [[#:user{:name "ftravers", :age 54}]]
+
+but what we really want is something that looks like:
+
+    datomic-tutorial.core> (query1)
+    [[{:user/name "ftravers",
+       :user/age 54,
+       :cars
+       [#:car{:make "toyota", :model "tacoma"}
+        #:car{:make "BMW", :model "325xi"}]}]]
+
+To get the above we change the query to look like:
+
+    (pull ?e
+          [:user/name
+           :user/age
+           {:cars [:car/make :car/model]}])
+
+So for the children, you start a new map, whose key
