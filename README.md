@@ -432,4 +432,6 @@ To get the above we change the query to look like:
            :user/age
            {:cars [:car/make :car/model]}])
 
-So for the children, you start a new map, whose key
+So for the children, you start a new map, whose key is the parent
+keyword that points to the child.  Then you start a vector and list
+the properties of the child you wish to grab.
