@@ -114,7 +114,7 @@ Here a column in SQL is equivalent to a field in datomic.  When we
 specify a column in SQL we give it a name, and we indicate what it
 will hold, a string, integer, etc&#x2026;  
 
-In datomic we do a similar thing, we define fields stating what their
+In datomic we do the same thing, we define fields stating what their
 name is and what type of data they hold.  In Datomic documentation
 fields are referred to as **attributes**.
 
