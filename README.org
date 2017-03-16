@@ -755,3 +755,4 @@ Primarily because they wouldn't have a combined index for fields in
 two separate tables.  So your performance would die.  In datomic each
 field has it's own index, so a query like the above, would still be
 performant. 
+
