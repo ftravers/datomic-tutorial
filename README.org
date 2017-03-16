@@ -71,7 +71,7 @@ name is and what type of data they hold.  Datomic calls fields
 *attributes*.
 
 So this is a bit of a big deal.  In RDBMS our columns are stuck
-together in a table.  In datomic we define a bunch of fields that dont
+together in a table.  In datomic we define a bunch of fields that don't
 necessarily have anything to do with one another.  We can randomly use
 any field we define for any record we want to store.  Remember datomic
 is just a bunch of maps floating around.  We are only allowed to pick
@@ -240,14 +240,14 @@ in the United States, for example.
 In regular RDBMS we compare rows of tables based on the values in a
 given column.  A similar SQL query might look like:
 
-#+BEGIN_SRC sql
+#+BEGIN_SRC SQL
 SELECT user-email FROM users WHERE user-age > 21
 #+END_SRC
 
-In datomic we dont have tables, just a bunch of maps.  So we dont have
+In datomic we don't have tables, just a bunch of maps.  So we don't have
 a ~FROM~ clause.  In our case we are inspecting the ~:user/age~ field,
 so ANY entity (map), which has that field will be included in our
-query.  This is a very important idea which we will revist later to
+query.  This is a very important idea which we will revisit later to
 re-inforce.
 
 This is a critical concept.  When two maps use the same field, that's
@@ -272,11 +272,11 @@ have two parts to the datalog, the ~:find~ part and the ~:where~ part.
 ** Where
 
 The query (~:where~) part selects (narrows down) the records
-(entities).  This is truely the querying part.  So this corresponds to
+(entities).  This is truly the querying part.  So this corresponds to
 the ~WHERE~ clause in SQL. 
 
 The ~:find~ part, is basically what to show from the found records.
-So this naturally corresponds to the ~SELECT~ part of sql.  Lets focus
+So this naturally corresponds to the ~SELECT~ part of SQL.  Lets focus
 on the ~:where~ part first.
 
 Where clauses take one or more vector clauses that are of the form:
@@ -347,7 +347,7 @@ We are going to convert these entity ids into familiar clojure maps
 using two approaches.  The first approach is a bit more instinctive,
 and the second approach is more enlightened.
 
-Instinctively, I'd look for an api to convert a ~:db/id~ into the
+Instinctively, I'd look for an API to convert a ~:db/id~ into the
 actual entity that the id represents.  So datomic has a function:
 ~entity~, which is documented like so:
 
@@ -430,7 +430,7 @@ To achieve this we use the following TWO where clauses:
 #+END_SRC
 
 The first thing to note about this query is that it contains two
-clauses.  Where clauses are implicitly ANDed together.  So both
+clauses.  Where clauses are implicitly AND-ed together.  So both
 criteria need to be true.
 
 Lets breakdown the first part of the query: 
@@ -543,7 +543,7 @@ we've used.
 
 A ~valueType~ of ~ref~ means we want this field to hold references to
 other entities in the DB.  This is the critical difference between a
-database and regular old clojure data structures that dont really
+database and regular old clojure data structures that don't really
 support references.
 
 The second thing to note is the ~cardinality~ is ~many~.  That means
@@ -587,7 +587,7 @@ looks like:
 #+END_SRC
 
 This reads: "find all the entities that have the ~:user/name~
-attribute (field) whos value is: ~"ftravers"~.  Now lets do some magic
+attribute (field) who's value is: ~"ftravers"~.  Now lets do some magic
 with the pull syntax to get the data out how we want it.
 
 ** Parent Child Pull Syntax
@@ -677,44 +677,33 @@ and its result:
 
 * Deeper Understanding
 
-So datomic is a giant vector (list) of maps (entities).  In RDBMS you
-typically 
+** Fields cross SQL Table boundaries
 
-
-;;; ----------------------------------------------------
-
-In datomic speak, they call field-names, *attributes*, and
-field-values, simply *values*.  So you will see them refer to query
-clauses like so:
+So pretend we have two entities like:
 
 #+BEGIN_SRC clojure
-[entity attribute value]
+{:user/name "ftravers"
+:year 1945}
+
+{:car/make "BMW 325xi"
+:year 2001}
 #+END_SRC
 
-Now say we wanted just the entities whose email exactly equaled
-~sally.jones@gmail.com~, our query would look like:
+In datomic we can compare these two seemingly quite different objects
+with each other because they share a field: ~:year~.  So I could write
+a query that returns *ALL THINGS* that are older than 35 years old.
+As I write this, it is 2017, so a 35 year old thing would be born
+(made) in approximately the year: 1982.  So the where clause would
+look like:
 
 #+BEGIN_SRC clojure
-[?e :user/email "sally.jones@gmail.com"]
+  [?e :year ?year]
+  [(<= ?year 1982)]
 #+END_SRC
 
-Here is a  complete query, for all entities that have the
-~:user/email~ field.  Which in our case will be both entities.
-
-#+BEGIN_SRC clojure
-(defn query1 []
-  (d/q '[:find ?e
-         :where [?e :user/email]]
-       (d/db @db-conn)))
-#+END_SRC
-
-Now when you run this query, you get a weird beast back:
-
-#+BEGIN_SRC clojure
-datomic-tutorial.core> (query1)
-#{[17592186045418] [17592186045419]}
-#+END_SRC
-
-So this is a set of vectors with one ~:db/id~ in each vector.  This
-isn't the most intuitive or user friendly representation, so lets
-improve upon this.
+In RDBMS you normally are only ever comparing things that exist in the
+same table.  So it'd be awkward to try a similar thing in an RDBMS.
+Primarily because they wouldn't have a combined index for fields in
+two separate tables.  So your performance would die.  In datomic each
+field has it's own index, so a query like the above, would still be
+performant. 
