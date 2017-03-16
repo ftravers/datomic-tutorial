@@ -1,12 +1,13 @@
 * A Datomic Tutorial
-
 ** Data Conceptual Shape
 
-Datomic allows clojure programmers to work with data in the structures
-they are comfortable with, maps and vectors.  The way to think about
-datomic is that it is one giant vector of maps.  Each map in this
-vector is what they call an /Entity/.  So lets draw this out with an
-example: 
+The data in datomic is conceptually one big vector of maps.  Re-read
+that sentence and cement it inside your head.  Conceiving of datomic
+like this is fundamental to understanding how to operate with it.
+
+Each map in this vector is one /entity/, in the datomic vocabulary.
+This corresponds to a row in a Relational Database Management System
+(RDBMS).  Below is a sample database of data:
 
 #+BEGIN_SRC clojure
   [{:db/id 1
@@ -26,42 +27,63 @@ example:
            {:db/id 2}]}]
 #+END_SRC
 
-So this datomic database has 3 entries/entities/maps.  A user,
-~ftravers~, who owns 2 cars.  Every map has to have a ~:db/id~.  This
-is what uniquely identifies that entity to datomic.  Datomic
+So this datomic database has 3 entries (entities/maps/rows).  A user,
+~ftravers~, who owns 2 cars.  Every map (entity) must have a ~:db/id~.
+This is what uniquely identifies that entity to datomic.  Datomic
 ~:db/id~'s are actually very large integers, so the data above is
 actually a bit fake, but I keep it simple to communicate the concept.
 
 As we can see in the above example, the ~:cars~ field of the user
 ~ftravers~ points (refers/links) to the cars he owns using the
-~:db/id~ field.
+~:db/id~ field.  The ~:db/id~ field allows one entity to refer to
+another entity (or many other entities).
 
-** Keywords
+** Map Fields
 
-The keywords that our maps use are not just hodge-podge, willy-nilly,
-used.  Rather we have to specify ahead of time the set of fields that
-maps are allowed to use.  This is called creating a schema.  
-
-A schema in regular relational database (RDBMS) means specifying
-tables and columns.  In datomic, we ONLY specify 'columns', or the
-entire set of allowed keywords.  
-
-Just like in an RDBMS, when we specify a column, we indicate the type
-of data that will live in that field.  We might setup a column to be a
-foriegn key (reference/link) to the primary key of another table.
-Thats how you link rows together.
-
-So lets take a break from concepts and see how to connect to a
-database quickly.
+So datomic is a vector of maps.  A map has fields, or keys, and in
+clojure keywords are used.  The three maps, in our example we had the
+fields/keys:
 
 #+BEGIN_SRC clojure
-  (def db-url "datomic:free://127.0.0.1:4334/omn-dev")
-  (def db-conn (atom (d/connect db-url)))
+:db/id
+:car/make
+:car/model
+:year
+:user/name
+:user/age
+:cars
 #+END_SRC
+
+Datomic doesn't allow you to just go ahead and pick any old keyword as
+a field (or key) to entity maps.  Rather we have to specify ahead of
+time which keywords entities in datomic can use.  This is called
+creating a schema.
+
+In the SQL world, creating a schema means defining table names, column
+names and its data type.
+
+In datomic, we do away with the concept of a table.  You could say
+datomic ONLY specifies 'columns'.  Here a column in SQL is equivalent
+to a field in datomic.  When we specify a column in SQL we give it a
+name, and we indicate what it will hold, a string, integer, etc...  In
+datomic we do a similar thing, we define fields stating what their
+name is and what type of data they hold.  Datomic calls fields
+*attributes*.
+
+So this is a bit of a big deal.  In RDBMS our columns are stuck
+together in a table.  In datomic we define a bunch of fields that dont
+necessarily have anything to do with one another.  We can randomly use
+any field we define for any record we want to store.  Remember datomic
+is just a bunch of maps floating around.  We are only allowed to pick
+fields that have been predefined, but other than that, we can create
+maps with any combinations of those fields.
+
+Okay enough concepts, lets see how to define a field.
 
 ** Basic Schema
 
-Now lets define a schema with just one field.
+Here we create a field in datomic.  We'll start with creating just one
+field.  This field will /hold/ an email value.
 
 #+BEGIN_SRC clojure
   (def schema [{:db/doc "A users email."
@@ -72,17 +94,42 @@ Now lets define a schema with just one field.
                 :db.install/_attribute :db.part/db}])
 #+END_SRC
 
-This field is of type ~string~.  The name of the field is:
-~:user/email~.  It should hold just one value, ~:db.cardinality/one~.
-Now we can load this into the database by transacting it like so:
+~:db/ident~ is the name of the field.  So when we want to use this
+field to store data, this is the keyword you use.
+
+~:db/valueType~ is the type of data that this field will hold.  Here
+we use the ~string~ datatype to store an email string.
+
+~:db/cardinality~ can be either ~one~ or ~many~.  Basically should
+this field hold a single item or a list of items.
+
+Those are the important fields to understand conceptually. ~:db/doc~
+is a documentation string, remember everything in datomic needs it's
+own ~:db/id~, and ~:db.install/_attribute~ instructs datomic to treat
+this data as schema field creation data.
+
+Before we can start adding schema to a database, we need to create the
+database!
 
 #+BEGIN_SRC clojure
-(d/transact @db-conn schema)
+  (def db-url "datomic:free://127.0.0.1:4334/omn-dev")
+  (d/create-database db-url)
+  (def db-conn (atom (d/connect db-url)))
+#+END_SRC
+
+Now we can load this schema definition into the database by
+transacting it like so:
+
+#+BEGIN_SRC clojure
+  (d/transact @db-conn schema)
 #+END_SRC
 
 ** Testdata
 
-Now we can actually start to load up a bit of testdata into the db.
+Now that we've defined a field, lets make use of it by
+creating/inserting an entity that makes use of the newly created
+field.  Remember data inside datomic is just a map, so lets just
+create that map:
 
 #+BEGIN_SRC clojure
   (def test-data
@@ -90,16 +137,21 @@ Now we can actually start to load up a bit of testdata into the db.
       :user/email "fenton.travers@gmail.com"}])
 #+END_SRC
 
-Whenever we add data into datomic we need to create and give the
-entity a ~:db/id~.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+So the ~:user/email~ part is understandable, but whats that other
+field ~:db/id~ all about?  Remember whenever we add data into datomic
+we need to create and give the entity a ~:db/id~.  The part that looks
+like: 
 
 #+BEGIN_SRC clojure
 #db/id[:db.part/user -1]
 #+END_SRC
 
-is the way we do this.  The -1 could be any negative number, and is
-like our fake temporary id.  Datomic will, upon inserting this record
-(entity/map), create the real permanent datomic id, ~:db/id~.
+is basically asking datomic to replace this with a valid ~:db/id~.
+The -1 could be any negative number, and is like our fake temporary
+id.  Datomic will, upon inserting this record (entity/map), create the
+real permanent datomic id, ~:db/id~.
 
 Lets transact this data into the DB:
 
@@ -129,12 +181,13 @@ GIT TAG: basic-schema-insert
 
 ** Better Testdata
 
-Okay a DB with only one record in it is pretty boring.  Also a db with
-only one column (field), that can't be compared, email, is very
-boring.  Lets create a DB with two entities (records/maps) in it.
-Lets have those entities have both email and age fields.
+Okay a DB with only one record (row/entity/map) in it is pretty
+boring.  Also a db with only one string column (field) is next to
+useless!  Lets create a DB with two entities (records/maps) in it.
+Also lets create a second field, age, so we can query the database for
+people 21 and older!
 
-The schema
+The schema:
 
 #+BEGIN_SRC clojure
   (def schema [{:db/doc "A users email."
@@ -171,7 +224,9 @@ GIT TAG: better-testdata
 Notice we need to specify a unique number for each entity in our
 batch, so franklin's temp ~:db/id~ is -2, while sally's is -1.
 
-*REMEMBER* to transact this schema and testdata into your cleaned up DB!
+*REMEMBER* to transact this schema and testdata into your cleaned up
+DB!  Otherwise you'll get an error for trying to add the ~:user/email~
+field twice.
 
 * Query the database
 
@@ -189,17 +244,22 @@ given column.  A similar SQL query might look like:
 SELECT user-email FROM users WHERE user-age > 21
 #+END_SRC
 
-In datomic we dont have tables, just a giant vector of maps.  So we
-dont have a ~FROM~ clause.  In our case we are inspecting the
-~:user/age~ field, so ANY entity (map), which has that field will be
-included in our query.  This is a very important idea which we will
-revist later to re-inforce.
+In datomic we dont have tables, just a bunch of maps.  So we dont have
+a ~FROM~ clause.  In our case we are inspecting the ~:user/age~ field,
+so ANY entity (map), which has that field will be included in our
+query.  This is a very important idea which we will revist later to
+re-inforce.
+
+This is a critical concept.  When two maps use the same field, that's
+what sort of links them together.  We will write our queries based on
+these fields, so when we query on a field that a map uses, it gets
+swept up in that query.
 
 ** Breaking down the datomic query
 
-A query takes datalog for its first argument and a database to execute
-that datalog on as the second argument.  Lets look at some datalog
-first:
+A query takes /datalog/ for its first argument and a /database/ to
+execute that datalog on as the second argument.  Lets just look at
+the datalog first:
 
 #+BEGIN_SRC clojure
   [:find ?e
@@ -208,66 +268,102 @@ first:
 
 Datalog is the query language to extract entities from datomic.  We
 have two parts to the datalog, the ~:find~ part and the ~:where~ part.
+
+** Where
+
 The query (~:where~) part selects (narrows down) the records
 (entities).  This is truely the querying part.  So this corresponds to
-the ~WHERE~ clause in SQL. The ~:find~ part, is basically what to show
-from the found records.  So this naturally corresponds to the ~SELECT~
-part of sql.  Lets focus on the ~:where~ part first.
+the ~WHERE~ clause in SQL. 
+
+The ~:find~ part, is basically what to show from the found records.
+So this naturally corresponds to the ~SELECT~ part of sql.  Lets focus
+on the ~:where~ part first.
 
 Where clauses take one or more vector clauses that are of the form:
 
 #+BEGIN_SRC clojure
-[entity-id field-name field-value]
+[entity field-name field-value]
 #+END_SRC
 
-In our example the ~?e~ basically means we aren't specifying a
-specific entity id, so just fill this in with whatever entity ids you
-find.  Next we specify an actual field name, ~:user/email~.  So this
-is like a constant, whereas ~?e~ is like a variable.  This means
-restrict the entities to ones who actually have the field:
-~:user/email~.  Finally we dont specify a field-value, so it can be
-any value.
+Working backwards in our example ~[?e :user/email]~, doesn't specify a
+field-value, so this means the field-value can be anything.
 
-This query reads like: "Get us all the entities that have the field:
-~:user/email~.  
+Next we say we want maps that use the field (attributed):
+~:user/email~.
 
-In datomic speak, they call field-names, *attributes*, and
-field-values, simply *values*.  So you will see them refer to query
-clauses like so:q
+Finally, the ~?e~, means each entity (maps) we find, store it in the
+variable ~?e~, because we are going to use it in another part of our
+datalog.
+
+In summary this query reads like: "Get us all the entities in the DB
+that have the field: ~:user/email~.
+
+** Find
+
+Finally we have the ~:find~ part of the datalog.  The correlates
+directly to the ~SELECT~ aspect of SQL, and it basically indicates
+what parts of the found records to return.
+
+We just say: ~:find ?e~, so we'll get the entity id (~:db/id~),
+returned.  We can convert an entity id, which is just an integer, into
+a clojure map. 
+
+Here is the full query, 
 
 #+BEGIN_SRC clojure
-[entity attribute value]
+  (defn query1 []
+    (d/q '[:find ?e
+           :where
+           [?e :user/email]]
+         (d/db @db-conn)))
 #+END_SRC
 
-Now say we wanted just the entities whose email exactly equaled
-~sally.jones@gmail.com~, our query would look like:
-
-#+BEGIN_SRC clojure
-[?e :user/email "sally.jones@gmail.com"]
-#+END_SRC
-
-Here is a  complete query, for all entities that have the
-~:user/email~ field.  Which in our case will be both entities.
-
-#+BEGIN_SRC clojure
-(defn query1 []
-  (d/q '[:find ?e
-         :where [?e :user/email]]
-       (d/db @db-conn)))
-#+END_SRC
-
-GIT TAG: simple-first-query
-
-Now when you run this query, you get a weird beast back:
+and the result of running it:
 
 #+BEGIN_SRC clojure
 datomic-tutorial.core> (query1)
 #{[17592186045418] [17592186045419]}
 #+END_SRC
 
-So this is a set of vectors with one ~:db/id~ in each vector.  This
-isn't the most intuitive or user friendly representation, so lets
-improve upon this.
+GIT TAG: simple-first-query
+
+Hmmm...  Okay this is kind of far from what we put in:
+
+#+BEGIN_SRC clojure
+  (def test-data
+    [{:db/id #db/id[:db.part/user -1]
+      :user/email "sally.jones@gmail.com"
+      :user/age 34}
+
+     {:db/id #db/id[:db.part/user -2]
+      :user/email "franklin.rosevelt@gmail.com"
+      :user/age 14}])
+#+END_SRC
+
+Those numbers are the entity id's (~:db/id~) of the two records (maps)
+we transacted into the database.
+
+We are going to convert these entity ids into familiar clojure maps
+using two approaches.  The first approach is a bit more instinctive,
+and the second approach is more enlightened.
+
+Instinctively, I'd look for an api to convert a ~:db/id~ into the
+actual entity that the id represents.  So datomic has a function:
+~entity~, which is documented like so:
+
+"Returns a dynamic map of the entity's attributes for the given id"
+
+Okay that looks promising.  A bit more research on google reveals the
+following works:
+
+#+BEGIN_SRC clojure
+datomic-tutorial.core> (map #(seq (d/entity (d/db @db-conn) (first %))) (query1))
+(([:user/email "sally.jones@gmail.com"] [:user/age 34])
+ ([:user/email "franklin.rosevelt@gmail.com"] [:user/age 14]))
+#+END_SRC
+
+Okay, that is the instinctual approach to extract the data we are
+looking for, now let me introduce a more enlightened approach, *pull*! 
 
 ** Pull Syntax
 
@@ -280,7 +376,7 @@ Instead of the line:
 we can convert that into pull syntax like so:
 
 #+BEGIN_SRC clojure
-:find (pull ?e [:user/email :user/age])
+  :find (pull ?e [:user/email :user/age])
 #+END_SRC
 
 and our output will now look like:
@@ -293,21 +389,80 @@ datomic-tutorial.core> (query1)
 
 Okay, that looks a lot nicer!
 
-Now we still need to modify this query to only return people who are
-21 and over.  Franklin, you aren't allowed to drink!
-
-To get this we set our ~:where~ clauses like so:
+The way to understand pull syntax is that the first argument is the
+entity that you want to apply the pull syntax to.  As a reminder lets
+put that here again so its fresh in your mind:
 
 #+BEGIN_SRC clojure
+  (def test-data
+    [{:db/id #db/id[:db.part/user -1]
+      :user/email "sally.jones@gmail.com"
+      :user/age 34}
+
+     {:db/id #db/id[:db.part/user -2]
+      :user/email "franklin.rosevelt@gmail.com"
+      :user/age 14}])
+#+END_SRC
+
+Now the second argument to the pull function is the pull pattern,
+again: ~[:user/email :user/age]~.  Here we declare the fields we want
+returned to us.  Once again the result of the pull syntax:
+
+#+BEGIN_SRC clojure
+datomic-tutorial.core> (query1)
+[[#:user{:email "sally.jones@gmail.com", :age 34}]
+ [#:user{:email "franklin.rosevelt@gmail.com", :age 14}]]
+#+END_SRC
+
+Much more user friendly!  Okay, now lets make a query that is more
+interesting that just "get all entities who have the ~:user/email~
+field!
+
+Lets modify this query to only return people who are 21 and over.
+Franklin, you aren't allowed to drink!
+
+To achieve this we use the following TWO where clauses:
+
+#+BEGIN_SRC clojure
+  :where
   [?e :user/age ?age]
   [(>= ?age 21)]
 #+END_SRC
 
-So this reads: "give me all the entities who have the field
-~:user/age~ and store the age into the variable ~?age~".  The second
-clause reads: "run the ~>=~ function on the variable ?age and the
-number 21, and if this returns ~true~, keep this entity, otherwise
-discard it.
+The first thing to note about this query is that it contains two
+clauses.  Where clauses are implicitly ANDed together.  So both
+criteria need to be true.
+
+Lets breakdown the first part of the query: 
+
+#+BEGIN_SRC clojure
+  [?e :user/age ?age]
+#+END_SRC
+
+Remember where clauses are in the format: [entity field-name
+field-value].  As an aside, documentation about datomic refers to this
+as: [entity attribute value].
+
+So this where clause reads like: "Find all entities that have the
+field (attribute) ~:user/age~, and stick the entity into the variable
+~?e~ and stick the value of the attribute, the actual users age, into
+the variable ~?age~.
+
+So for each entity that meets this criteria will have the entity
+stored in the ~?e~ variable, and the age in the ~?age~ variable.  Now
+we can make use of the age value in the second where clause:
+
+#+BEGIN_SRC clojure
+  [(>= ?age 21)]
+#+END_SRC
+
+Okay this is a special, and super cool variant on normal where
+clauses.  We can run *ANY* function here that returns a boolean
+result.  Well we know the function ~>=~ is a boolean value returning
+function, so it's legit.  Second, for each entity, the users age will
+be stored in the variable ~?age~, so we can simply pass that into the
+function to get our bool result!  This just says, we want entities who
+have an age >= 21.  Simple!
 
 So here is the full new query:
 
@@ -319,9 +474,6 @@ So here is the full new query:
          [(>= ?age 21)]]
        (d/db @db-conn)))
 #+END_SRC
-
-The where clauses are *AND*ed together, so both must be true in order
-for the entity to be included in the search results.
 
 And now we get the desired result:
 
@@ -359,14 +511,17 @@ So how do we model this?  First we start with the schema.  We'll need
 the fields: ~:car/make~, ~:car/model~, ~:year~, ~:user/name~, ~:user/age~,
 and ~:cars~. 
 
-~:car/make~, ~:car/model~, and ~:user/name~ are all of type ~string~ and
-cardinality one.  That is dont have a list of makes, models, or names,
-they are single valued. For ~:year~ and ~:user/age~ we can use
-integers.  ~:cars~ is the new one.  It's cardinality will be type
-~many~ also the type that it will hold will be of type ~reference~,
-since they refer to other entities.  Lets look only at the schema for
-~:cars~, the others you should be able to piece together from previous
-schema examples, or just look at the 
+~:car/make~, ~:car/model~, and ~:user/name~ are all of type ~string~
+and cardinality one.  For ~:year~ and ~:user/age~ we can use integers.
+~:cars~ is the new one.  
+
+The field ~:cars~ has a cardinality of ~many~ also the type that it
+will hold is of type reference, since we only want to refer to the
+cars already defined in the DB.
+
+Lets look only at the schema for ~:cars~, the others you should be
+able to piece together from previous schema examples, or just look at
+the:
 
 GIT TAG: parent-child-modeling
 
@@ -383,12 +538,20 @@ For ~:cars~, the schema will look like:
     :db.install/_attribute :db.part/db}
 #+END_SRC 
 
-You can see the values for ~cardinality~ and ~valueType~ that we've
-used. 
+Take special not of the values for ~cardinality~ and ~valueType~ that
+we've used.  
+
+A ~valueType~ of ~ref~ means we want this field to hold references to
+other entities in the DB.  This is the critical difference between a
+database and regular old clojure data structures that dont really
+support references.
+
+The second thing to note is the ~cardinality~ is ~many~.  That means
+this field will hold a list of values, not just a single value.
 
 ** Testdata
 
-Here is some testdata:
+Now lets make some testdata we can transaction into the DB:
 
 #+BEGIN_SRC clojure
 (def test-data
@@ -411,30 +574,33 @@ Here is some testdata:
 
 GIT TAG: parent-child-modeling
 
-So now we've stuffed some parent child data into the db, lets see how
+So now we've stuffed some parent/child data into the DB, lets see how
 to get it out in a nice way.
 
 ** Querying Parent Child Data
 
-So first of all we'll just find the record we care about, a where
-clause that looks like:
+First we'll find the record we care about with a where clause that
+looks like:
 
 #+BEGIN_SRC clojure
 [?e :user/name "ftravers"]
 #+END_SRC
 
-is sufficient to find that entity.  Now lets do some magic with the
-pull syntax to get the data how we want it.
+This reads: "find all the entities that have the ~:user/name~
+attribute (field) whos value is: ~"ftravers"~.  Now lets do some magic
+with the pull syntax to get the data out how we want it.
 
 ** Parent Child Pull Syntax
 
-We have already learned how to dispay entity fields.
+We have already learned how to extract entity fields with a basic pull
+pattern:
 
 #+BEGIN_SRC clojure
 (pull ?e [:user/name :user/age])
 #+END_SRC
 
-will spit out data like:
+retrieves the ~:user/name~ and ~:user/age~ fields from the found
+entity/entities.  Again the result looks like this:
 
 #+BEGIN_SRC clojure
 datomic-tutorial.core> (query1)
@@ -452,6 +618,10 @@ datomic-tutorial.core> (query1)
     #:car{:make "BMW", :model "325xi"}]}]]
 #+END_SRC
 
+So we want more than just the simple fields that an entity has, but we
+want to follow any references it has to other entities and get values
+from those entities.
+
 To get the above we change the query to look like:
 
 #+BEGIN_SRC clojure
@@ -461,6 +631,69 @@ To get the above we change the query to look like:
          {:cars [:car/make :car/model]}])
 #+END_SRC
 
-So for the children, you start a new map, whose key is the parent
-keyword that points to the child.  Then you start a vector and list
-the properties of the child you wish to grab.
+So to get the children, and print out their fields, you start a new
+map, whose key is the parent field that points to the child.  In our
+case ~:cars~.  Then you start a vector and list the properties of the
+child you wish to grab.
+
+This is an extremely elegant way to extract arbitrary levels of data
+from datomic.  Just imagine the mess this would look like with SQL.
+Maybe here is a stab just for comparison.
+
+#+BEGIN_SRC sql
+SELECT users.id users.name, users.age, cars.make, cars.model, cars.year
+FROM users cars
+WHERE users.id == cars.userid
+#+END_SRC
+
+And this would produce a result like:
+
+#+BEGIN_SRC clojure
+  [[1 ftravers 54 "toyota" "tacoma" 2013]
+   [1 ftravers 54 "BMW" "325xi" 2001]]
+#+END_SRC
+
+
+* Mind Bending
+
+So datomic is a giant vector (list) of maps (entities).  In RDBMS you
+typically 
+
+
+;;; ----------------------------------------------------
+
+In datomic speak, they call field-names, *attributes*, and
+field-values, simply *values*.  So you will see them refer to query
+clauses like so:
+
+#+BEGIN_SRC clojure
+[entity attribute value]
+#+END_SRC
+
+Now say we wanted just the entities whose email exactly equaled
+~sally.jones@gmail.com~, our query would look like:
+
+#+BEGIN_SRC clojure
+[?e :user/email "sally.jones@gmail.com"]
+#+END_SRC
+
+Here is a  complete query, for all entities that have the
+~:user/email~ field.  Which in our case will be both entities.
+
+#+BEGIN_SRC clojure
+(defn query1 []
+  (d/q '[:find ?e
+         :where [?e :user/email]]
+       (d/db @db-conn)))
+#+END_SRC
+
+Now when you run this query, you get a weird beast back:
+
+#+BEGIN_SRC clojure
+datomic-tutorial.core> (query1)
+#{[17592186045418] [17592186045419]}
+#+END_SRC
+
+So this is a set of vectors with one ~:db/id~ in each vector.  This
+isn't the most intuitive or user friendly representation, so lets
+improve upon this.

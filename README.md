@@ -5,7 +5,7 @@
 <li><a href="#sec-1">1. A Datomic Tutorial</a>
 <ul>
 <li><a href="#sec-1-1">1.1. Data Conceptual Shape</a></li>
-<li><a href="#sec-1-2">1.2. Keywords</a></li>
+<li><a href="#sec-1-2">1.2. Map Fields</a></li>
 <li><a href="#sec-1-3">1.3. Basic Schema</a></li>
 <li><a href="#sec-1-4">1.4. Testdata</a></li>
 <li><a href="#sec-1-5">1.5. Blow away and recreate DB</a></li>
@@ -27,6 +27,7 @@
 <li><a href="#sec-3-4">3.4. Parent Child Pull Syntax</a></li>
 </ul>
 </li>
+<li><a href="#sec-4">4. Mind Bending</a></li>
 </ul>
 </div>
 </div>
@@ -35,11 +36,12 @@
 
 ## Data Conceptual Shape<a id="sec-1-1" name="sec-1-1"></a>
 
-Datomic allows clojure programmers to work with data in the structures
-they are comfortable with, maps and vectors.  The way to think about
-datomic is that it is one giant vector of maps.  Each map in this
-vector is what they call an *Entity*.  So lets draw this out with an
-example: 
+The data in datomic is conceptually one big vector of maps.  Re-read
+that sentence and cement it inside your head.  Conceiving of datomic
+like this is fundamental to understanding how to operate with it.
+
+Each map in this vector is one *entity*, in the datomic vocabulary.
+Below is a sample database of data:
 
     [{:db/id 1
       :car/make "toyota"
@@ -57,40 +59,50 @@ example:
       :cars [{:db/id 1}
              {:db/id 2}]}]
 
-So this datomic database has 3 entries/entities/maps.  A user,
-`ftravers`, who owns 2 cars.  Every map has to have a `:db/id`.  This
-is what uniquely identifies that entity to datomic.  Datomic
+So this datomic database has 3 entries (entities/maps/rows).  A user,
+`ftravers`, who owns 2 cars.  Every map (entity) must have a `:db/id`.
+This is what uniquely identifies that entity to datomic.  Datomic
 `:db/id`'s are actually very large integers, so the data above is
 actually a bit fake, but I keep it simple to communicate the concept.
 
 As we can see in the above example, the `:cars` field of the user
 `ftravers` points (refers/links) to the cars he owns using the
-`:db/id` field.
+`:db/id` field.  The `:db/id` field allows one entity to refer to
+another entity (or many other entities).
 
-## Keywords<a id="sec-1-2" name="sec-1-2"></a>
+## Map Fields<a id="sec-1-2" name="sec-1-2"></a>
 
-The keywords that our maps use are not just hodge-podge, willy-nilly,
-used.  Rather we have to specify ahead of time the set of fields that
-maps are allowed to use.  This is called creating a schema.  
+So datomic is a vector of maps.  A map has fields.  In our example we
+had the fields: 
 
-A schema in regular relational database (RDBMS) means specifying
-tables and columns.  In datomic, we ONLY specify 'columns', or the
-entire set of allowed keywords.  
+    :db/id
+    :car/make
+    :car/model
+    :year
+    :user/name
+    :user/age
+    :cars
 
-Just like in an RDBMS, when we specify a column, we indicate the type
-of data that will live in that field.  We might setup a column to be a
-foriegn key (reference/link) to the primary key of another table.
-Thats how you link rows together.
+Datomic doesn't allow you to just go ahead and pick any old keyword as
+a field (or key) to entity maps.  Rather we have to specify ahead of
+time which keywords entities in datomic can use.  This is called
+creating a schema.
 
-So lets take a break from concepts and see how to connect to a
-database quickly.
+In the SQL world, creating a schema means defining table names, column
+names and the data types a column will house.
 
-    (def db-url "datomic:free://127.0.0.1:4334/omn-dev")
-    (def db-conn (atom (d/connect db-url)))
+In datomic, we do away with the concept of a table.  You could say
+datomic ONLY specifies 'columns'.  Here a column in SQL is equivalent
+to a field in datomic.  When we specify a column in SQL we give it a
+name, and we indicate what it will hold, a string, integer, etc&#x2026;  In
+datomic we do a similar thing, we define fields stating what their
+name is and what type of data they hold.  Datomic calls fields
+**attributes**.
 
 ## Basic Schema<a id="sec-1-3" name="sec-1-3"></a>
 
-Now lets define a schema with just one field.
+Lets see how to create a field in datomic.  We'll start with creating
+just one field.  This field will *hold* an email value.
 
     (def schema [{:db/doc "A users email."
                   :db/id #db/id[:db.part/db]
@@ -101,26 +113,42 @@ Now lets define a schema with just one field.
 
 This field is of type `string`.  The name of the field is:
 `:user/email`.  It should hold just one value, `:db.cardinality/one`.
+
+Lets actually create this field in datomic, first however we need to
+create a blank datomic database.
+
+    (def db-url "datomic:free://127.0.0.1:4334/omn-dev")
+    (d/create-database db-url)
+    (def db-conn (atom (d/connect db-url)))
+
 Now we can load this into the database by transacting it like so:
 
     (d/transact @db-conn schema)
 
 ## Testdata<a id="sec-1-4" name="sec-1-4"></a>
 
-Now we can actually start to load up a bit of testdata into the db.
+Now that we've defined a field, lets make use of it by
+creating/inserting an entity that makes use of the newly created
+field.  Remember data inside datomic is just a map, so lets just
+create that map:
 
     (def test-data
       [{:db/id #db/id[:db.part/user -1]
         :user/email "fenton.travers@gmail.com"}])
 
-Whenever we add data into datomic we need to create and give the
-entity a `:db/id`.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+So the `:user/email` part is understandable, but whats that other
+field `:db/id` all about?  Remember whenever we add data into datomic
+we need to create and give the entity a `:db/id`.  The part that looks
+like: 
 
     #db/id[:db.part/user -1]
 
-is the way we do this.  The -1 could be any negative number, and is
-like our fake temporary id.  Datomic will, upon inserting this record
-(entity/map), create the real permanent datomic id, `:db/id`.
+is basically asking datomic to replace this with a valid `:db/id`.
+The -1 could be any negative number, and is like our fake temporary
+id.  Datomic will, upon inserting this record (entity/map), create the
+real permanent datomic id, `:db/id`.
 
 Lets transact this data into the DB:
 
@@ -435,3 +463,8 @@ To get the above we change the query to look like:
 So for the children, you start a new map, whose key is the parent
 keyword that points to the child.  Then you start a vector and list
 the properties of the child you wish to grab.
+
+# Mind Bending<a id="sec-4" name="sec-4"></a>
+
+So datomic is a giant vector (list) of maps (entities).  In RDBMS you
+typically
