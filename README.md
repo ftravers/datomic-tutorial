@@ -180,8 +180,6 @@ create that map:
       [{:db/id #db/id[:db.part/user -1]
         :user/email "fenton.travers@gmail.com"}])
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 So the `:user/email` part is understandable, but whats that other
 field `:db/id` all about?  Remember whenever we add data into datomic
 we need to create and give the entity a `:db/id`.  The part that looks
