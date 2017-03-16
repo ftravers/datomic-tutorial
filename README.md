@@ -106,8 +106,9 @@ In the SQL world, creating a schema means defining table names, column
 names and column data types.
 
 In datomic, we do away with the concept of a table.  You could say
-datomic ONLY specifies 'columns' that are **NOT** connected by the
-concept of a table of columns.  
+datomic ONLY specifies 'columns'.  Additionally, these columns have no
+relationship to (or grouping with) any other column.  Contrast this
+with an RDBMS which groups columns with the concept of a table.
 
 Here a column in SQL is equivalent to a field in datomic.  When we
 specify a column in SQL we give it a name, and we indicate what it
