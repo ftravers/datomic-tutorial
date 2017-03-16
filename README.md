@@ -45,7 +45,7 @@
 You can think about the data that is stored in datomic as just a bunch
 of maps.  Datomic doesn't have tables, like a relational database.
 Records (rows) are just maps chucked into a large pile.  Datomic calls
-these maps Entities.  The keys that these maps are special, as we'll
+these maps Entities.  The keys that these maps use are special, as we'll
 get into explaining later.
 
 To more fully conceive of the database, you could just say it's a
