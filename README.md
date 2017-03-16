@@ -135,12 +135,13 @@ Okay enough concepts, lets see how to define a field.
 Here we create a field (define an attribute) in datomic.  We'll start
 with creating just one field.  This field will *hold* an email value.
 
-    (def schema [{:db/doc "A users email."
-                  :db/id #db/id[:db.part/db]
-                  :db/ident :user/email
-                  :db/valueType :db.type/string
-                  :db/cardinality :db.cardinality/one
-                  :db.install/_attribute :db.part/db}])
+    (def schema
+      [{:db/doc "A users email."
+        :db/id #db/id[:db.part/db]
+        :db/ident :user/email
+        :db/valueType :db.type/string
+        :db/cardinality :db.cardinality/one
+        :db.install/_attribute :db.part/db}])
 
 `:db/ident` is the name of the field.  So when we want to use this
 field to store data, this is the keyword that you would use.
@@ -225,19 +226,20 @@ people 21 and older!
 
 The schema:
 
-    (def schema [{:db/doc "A users email."
-                  :db/id #db/id[:db.part/db]
-                  :db/ident :user/email
-                  :db/valueType :db.type/string
-                  :db/cardinality :db.cardinality/one
-                  :db.install/_attribute :db.part/db}
+    (def schema
+      [{:db/doc "A users email."
+        :db/id #db/id[:db.part/db]
+        :db/ident :user/email
+        :db/valueType :db.type/string
+        :db/cardinality :db.cardinality/one
+        :db.install/_attribute :db.part/db}
     
-                 {:db/doc "A users age."
-                  :db/id #db/id[:db.part/db]
-                  :db/ident :user/age
-                  :db/valueType :db.type/long
-                  :db/cardinality :db.cardinality/one
-                  :db.install/_attribute :db.part/db}])
+       {:db/doc "A users age."
+        :db/id #db/id[:db.part/db]
+        :db/ident :user/age
+        :db/valueType :db.type/long
+        :db/cardinality :db.cardinality/one
+        :db.install/_attribute :db.part/db}])
 
 So we've added another field, age, that is type: `:db.type/long`.  Now
 lets add some actual data:
