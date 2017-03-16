@@ -643,7 +643,7 @@ Maybe here is a stab just for comparison.
 #+BEGIN_SRC sql
 SELECT users.id users.name, users.age, cars.make, cars.model, cars.year
 FROM users cars
-WHERE users.id == cars.userid
+WHERE users.id == cars.userid AND users.name == "ftravers"
 #+END_SRC
 
 And this would produce a result like:
@@ -653,8 +653,29 @@ And this would produce a result like:
    [1 ftravers 54 "BMW" "325xi" 2001]]
 #+END_SRC
 
+for comparison equivalent datalog:
 
-* Mind Bending
+#+BEGIN_SRC clojure
+  '[:find
+    (pull ?e
+          [:user/name
+           :user/age
+           {:cars [:car/make :car/model]}])
+    :where
+    [?e :user/name "ftravers"]]
+#+END_SRC
+
+and its result:
+
+#+BEGIN_SRC clojure
+[[{:user/name "ftravers",
+   :user/age 54,
+   :cars
+   [#:car{:make "toyota", :model "tacoma"}
+    #:car{:make "BMW", :model "325xi"}]}]]
+#+END_SRC
+
+* Deeper Understanding
 
 So datomic is a giant vector (list) of maps (entities).  In RDBMS you
 typically 
