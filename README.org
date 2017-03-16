@@ -1,13 +1,17 @@
 * A Datomic Tutorial
-** Data Conceptual Shape
+** Data Shape
 
-The data in datomic is conceptually one big vector of maps.  Re-read
-that sentence and cement it inside your head.  Conceiving of datomic
-like this is fundamental to understanding how to operate with it.
+You can think about the data that is stored in datomic as just a bunch
+of maps.  Datomic doesn't have tables, like a relational database.
+Records (rows) are just maps chucked into a large pile.  Datomic calls
+these maps Entities.  The keys that these maps are special, as we'll
+get into explaining later.
 
-Each map in this vector is one /entity/, in the datomic vocabulary.
-This corresponds to a row in a Relational Database Management System
-(RDBMS).  Below is a sample database of data:
+To more fully conceive of the database, you could just say it's a
+vector of maps.
+
+Below is an explicit visual sample of how you can conceive of a
+datomic database:
 
 #+BEGIN_SRC clojure
   [{:db/id 1
@@ -28,21 +32,25 @@ This corresponds to a row in a Relational Database Management System
 #+END_SRC
 
 So this datomic database has 3 entries (entities/maps/rows).  A user,
-~ftravers~, who owns 2 cars.  Every map (entity) must have a ~:db/id~.
-This is what uniquely identifies that entity to datomic.  Datomic
-~:db/id~'s are actually very large integers, so the data above is
-actually a bit fake, but I keep it simple to communicate the concept.
+~ftravers~, who owns 2 cars.  
 
-As we can see in the above example, the ~:cars~ field of the user
-~ftravers~ points (refers/links) to the cars he owns using the
+Every map (entity) must have a ~:db/id~.  This is what uniquely
+identifies that entity to datomic.  Datomic ~:db/id~'s are actually
+very large integers, so the data above is actually a bit fake, but I
+keep it simple to communicate the concept.
+
+As we can see in the above example, the ~:cars~ field (key) of the
+user ~ftravers~ points (refers/links) to the cars he owns using the
 ~:db/id~ field.  The ~:db/id~ field allows one entity to refer to
-another entity (or many other entities).
+another entity, or as in this case, multiple other entities.
 
 ** Map Fields
 
-So datomic is a vector of maps.  A map has fields, or keys, and in
-clojure keywords are used.  The three maps, in our example we had the
-fields/keys:
+So datomic can be thought of as a vector of maps.  Each map has
+fields, or keys, and like idiomatic clojure, keywords are used.  
+
+Looking at all three records (maps, entities), in our sample database
+we can see that the collective set of keys (fields) used are:
 
 #+BEGIN_SRC clojure
 :db/id
@@ -55,28 +63,35 @@ fields/keys:
 #+END_SRC
 
 Datomic doesn't allow you to just go ahead and pick any old keyword as
-a field (or key) to entity maps.  Rather we have to specify ahead of
-time which keywords entities in datomic can use.  This is called
-creating a schema.
+a field (or key) to entity maps, like you could in plain old clojure.
+Rather we have to specify ahead of time which keywords entities in
+datomic are allowed to use.  Defining which keys (fields) can be used
+by maps (entities) is the process of creating a datomic /schema/.
 
 In the SQL world, creating a schema means defining table names, column
-names and its data type.
+names and column data types.
 
 In datomic, we do away with the concept of a table.  You could say
-datomic ONLY specifies 'columns'.  Here a column in SQL is equivalent
-to a field in datomic.  When we specify a column in SQL we give it a
-name, and we indicate what it will hold, a string, integer, etc...  In
-datomic we do a similar thing, we define fields stating what their
-name is and what type of data they hold.  Datomic calls fields
-*attributes*.
+datomic ONLY specifies 'columns' that are *NOT* connected by the
+concept of a table of columns.  
+
+Here a column in SQL is equivalent to a field in datomic.  When we
+specify a column in SQL we give it a name, and we indicate what it
+will hold, a string, integer, etc...  
+
+In datomic we do a similar thing, we define fields stating what their
+name is and what type of data they hold.  In Datomic documentation
+fields are referred to as *attributes*.
 
 So this is a bit of a big deal.  In RDBMS our columns are stuck
-together in a table.  In datomic we define a bunch of fields that don't
-necessarily have anything to do with one another.  We can randomly use
-any field we define for any record we want to store.  Remember datomic
-is just a bunch of maps floating around.  We are only allowed to pick
-fields that have been predefined, but other than that, we can create
-maps with any combinations of those fields.
+together in a table.  In datomic we define a bunch of fields that
+don't necessarily have anything to do with one another.  We can
+randomly use any field we define for any record (map/entity) we want
+to store!  Remember datomic is just a big pile of maps.  
+
+Again, we can only use fields that have been predefined (the schema),
+but other than that, we can create maps with any combinations of those
+fields.  We'll revist this idea later on.
 
 Okay enough concepts, lets see how to define a field.
 
