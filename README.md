@@ -115,7 +115,7 @@ specify a column in SQL we give it a name, and we indicate what it
 will hold, a string, integer, etc&#x2026;  
 
 In datomic we do the same thing, we define fields stating what their
-name is and what type of data they hold.  In Datomic documentation
+name is and what type of data they hold.  In Datomic nomenclature
 fields are referred to as **attributes**.
 
 So this is a bit of a big deal.  In RDBMS our columns are stuck
