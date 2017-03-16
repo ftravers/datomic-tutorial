@@ -268,7 +268,7 @@ query on that field will pull in those maps.  It *doesn't* matter if
 they have *ANY* other fields in common.
 
 Contrast this with an RDBMS.  First of all, all rows that belong
-to a given table will by definition has *ALL* the same exact fields.
+to a given table will by definition have *ALL* the same exact fields.
 Second, if you have rows in other tables, there isn't a reasonable way
 to include them in the query.
 
