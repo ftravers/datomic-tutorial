@@ -15,9 +15,9 @@
 <li><a href="#sec-2">2. Query the database</a>
 <ul>
 <li><a href="#sec-2-1">2.1. Concept</a></li>
-<li><a href="#sec-2-2">2.2. Breaking down the datomic query</a></li>
-<li><a href="#sec-2-3">2.3. Where</a></li>
-<li><a href="#sec-2-4">2.4. Find</a></li>
+<li><a href="#sec-2-2">2.2. Breaking down a datomic query</a></li>
+<li><a href="#sec-2-3">2.3. Datalog :where</a></li>
+<li><a href="#sec-2-4">2.4. Datalog :find</a></li>
 <li><a href="#sec-2-5">2.5. Pull Syntax</a></li>
 </ul>
 </li>
@@ -134,8 +134,8 @@ Okay enough concepts, lets see how to define a field.
 
 ## Basic Schema<a id="sec-1-3" name="sec-1-3"></a>
 
-Here we create a field in datomic.  We'll start with creating just one
-field.  This field will *hold* an email value.
+Here we create a field (define an attribute) in datomic.  We'll start
+with creating just one field.  This field will *hold* an email value.
 
     (def schema [{:db/doc "A users email."
                   :db/id #db/id[:db.part/db]
@@ -145,7 +145,7 @@ field.  This field will *hold* an email value.
                   :db.install/_attribute :db.part/db}])
 
 `:db/ident` is the name of the field.  So when we want to use this
-field to store data, this is the keyword you use.
+field to store data, this is the keyword that you would use.
 
 `:db/valueType` is the type of data that this field will hold.  Here
 we use the `string` datatype to store an email string.
@@ -271,70 +271,92 @@ the querying of the data.  A query might be: "Give me the users who
 are over 21", if you are making an app to see who is legal to drink
 in the United States, for example.
 
-In regular RDBMS we compare rows of tables based on the values in a
-given column.  A similar SQL query might look like:
+In regular RDBMS we compare rows of a table based on the values in a
+given column.  The SQL query might look like:
 
-    SELECT user-email FROM users WHERE user-age > 21
+    SELECT email FROM users WHERE age > 21
 
-In datomic we don't have tables, just a bunch of maps.  So we don't have
-a `FROM` clause.  In our case we are inspecting the `:user/age` field,
-so ANY entity (map), which has that field will be included in our
-query.  This is a very important idea which we will revisit later to
-re-inforce.
+In datomic we don't have tables, just a bunch of maps.  So we don't
+have a `FROM` clause.  In our case we want to inspect the `:user/age`
+field.  This means, ANY entity (map), which has the `:user/age` field
+will be included in our query.  This is a very important idea which we
+will revisit later to re-inforce.
 
-This is a critical concept.  When two maps use the same field, that's
-what sort of links them together.  We will write our queries based on
-these fields, so when we query on a field that a map uses, it gets
-swept up in that query.
+Lets reinforce this concept.  When maps use the same field, then any
+query on that field will pull in those maps.  It **doesn't** matter if
+they have **ANY** other fields in common.
 
-## Breaking down the datomic query<a id="sec-2-2" name="sec-2-2"></a>
+Contrast this with an RDBMS.  First of all, all rows that belong
+to a given table will by definition has **ALL** the same exact fields.
+Second, if you have rows in other tables, there isn't a reasonable way
+to include them in the query.
+
+Often you'll find rows in an RDBMS that have `null` values, because
+for whatever reason, for those rows, having a value in that column
+doesn't make sense.  This rigidity of RDBMS, that all rows are forced
+to have values, even if it is just `null`, for all of the columns.
+
+What do we gain by having this restriction?  I would argue nothing.
+So as a concequence datomic does away with this needless restriction.
+Removing unneccessary restrictions IMO, is always a good thing.
+
+## Breaking down a datomic query<a id="sec-2-2" name="sec-2-2"></a>
 
 A query takes *datalog* for its first argument and a *database* to
-execute that datalog on as the second argument.  Lets just look at
-the datalog first:
+execute that datalog on, as the second argument.  Lets just look at
+the datalog part first:
 
     [:find ?e
      :where [?e :user/email]]
 
-Datalog is the query language to extract entities from datomic.  We
-have two parts to the datalog, the `:find` part and the `:where` part.
+Datalog at a minimum has a `:find` part, and a `:where` part.  First
+we'll examine the where part.
 
-## Where<a id="sec-2-3" name="sec-2-3"></a>
+## Datalog :where<a id="sec-2-3" name="sec-2-3"></a>
 
 The query (`:where`) part selects (narrows down) the records
 (entities).  This is truly the querying part.  So this corresponds to
 the `WHERE` clause in SQL. 
 
-The `:find` part, is basically what to show from the found records.
-So this naturally corresponds to the `SELECT` part of SQL.  Lets focus
-on the `:where` part first.
+The `:find` part, is basically dictates what to show from the found
+records.  So this naturally corresponds to the `SELECT` part of SQL.
+Lets focus on the `:where` part first.
 
 Where clauses take one or more vector clauses that are of the form:
 
     [entity field-name field-value]
 
-Working backwards in our example `[?e :user/email]`, doesn't specify a
-field-value, so this means the field-value can be anything.
+or in datomic speak:
 
-Next we say we want maps that use the field (attributed):
+    [entity attribute value]
+
+Working backwards in our example `[?e :user/email]`, it only specifies
+the entity and attribute (field) aspects.  It doesn't specify a
+field-value.  What this means, is that the field-value doesn't matter,
+we dont care what it is, it can be anything.
+
+Next we say we want maps (entities) that have the field (attribute):
 `:user/email`.
 
-Finally, the `?e`, means each entity (maps) we find, store it in the
-variable `?e`, because we are going to use it in another part of our
-datalog.
+Finally, the `?e`, means each entity (map) we find, store it in the
+variable `?e`, because we are going to use it in the `:find` part of
+our datalog.
 
 In summary this query reads like: "Get us all the entities in the DB
 that have the field: `:user/email`.
 
-## Find<a id="sec-2-4" name="sec-2-4"></a>
+## Datalog :find<a id="sec-2-4" name="sec-2-4"></a>
 
 Finally we have the `:find` part of the datalog.  The correlates
 directly to the `SELECT` aspect of SQL, and it basically indicates
-what parts of the found records to return.
+what fields of the found records to return.
 
-We just say: `:find ?e`, so we'll get the entity id (`:db/id`),
-returned.  We can convert an entity id, which is just an integer, into
-a clojure map. 
+We just say: `:find ?e`, which can be read as: "Just return the entity
+itself to me."  Datomic, kind of makes a short cut at this point and
+actually returns the entity-id instead of the entity itself.  We will
+show later how to convert an entity-id, which is just an integer, into
+a clojure map that better reflects what that entity actually consists
+of.
 
 Here is the full query, 
 
@@ -351,7 +373,8 @@ and the result of running it:
 
 GIT TAG: simple-first-query
 
-Hmmm&#x2026;  Okay this is kind of far from what we put in:
+Hmmm&#x2026;  Okay this is kind of far from what we put in.  Below is the
+original data we trasacted into the DB:
 
     (def test-data
       [{:db/id #db/id[:db.part/user -1]
@@ -362,16 +385,16 @@ Hmmm&#x2026;  Okay this is kind of far from what we put in:
         :user/email "franklin.rosevelt@gmail.com"
         :user/age 14}])
 
-Those numbers are the entity id's (`:db/id`) of the two records (maps)
-we transacted into the database.
+The numbers returned by the query are the entity id's (`:db/id`) of
+the two records (maps) we transacted into the database.
 
 We are going to convert these entity ids into familiar clojure maps
 using two approaches.  The first approach is a bit more instinctive,
-and the second approach is more enlightened.
+and the second approach is more enlightened (elegant).
 
 Instinctively, I'd look for an API to convert a `:db/id` into the
 actual entity that the id represents.  So datomic has a function:
-`entity`, which is documented like so:
+`(entity db entity-id)`, which is documented like so:
 
 "Returns a dynamic map of the entity's attributes for the given id"
 
@@ -383,11 +406,12 @@ following works:
      ([:user/email "franklin.rosevelt@gmail.com"] [:user/age 14]))
 
 Okay, that is the instinctual approach to extract the data we are
-looking for, now let me introduce a more enlightened approach, **pull**! 
+looking for, but it isn't very elegant.  Now let me introduce a more
+enlightened approach, **pull syntax**!
 
 ## Pull Syntax<a id="sec-2-5" name="sec-2-5"></a>
 
-Instead of the line:
+Instead of having the find clause look like:
 
     :find ?e
 
@@ -404,8 +428,10 @@ and our output will now look like:
 Okay, that looks a lot nicer!
 
 The way to understand pull syntax is that the first argument is the
-entity that you want to apply the pull syntax to.  As a reminder lets
-put that here again so its fresh in your mind:
+entity that you want to apply a pull pattern to.  The second part is
+the **pull pattern**.  
+
+Lets remind ourselves of the shape of the data in the DB:
 
     (def test-data
       [{:db/id #db/id[:db.part/user -1]
@@ -416,15 +442,17 @@ put that here again so its fresh in your mind:
         :user/email "franklin.rosevelt@gmail.com"
         :user/age 14}])
 
-Now the second argument to the pull function is the pull pattern,
-again: `[:user/email :user/age]`.  Here we declare the fields we want
-returned to us.  Once again the result of the pull syntax:
+The pull pattern we use is: `[:user/email :user/age]`.  Here we
+declare the fields from the entity that we want returned to us.  Once
+again the result of the pull syntax:
 
     datomic-tutorial.core> (query1)
     [[#:user{:email "sally.jones@gmail.com", :age 34}]
      [#:user{:email "franklin.rosevelt@gmail.com", :age 14}]]
 
-Much more user friendly!  Okay, now lets make a query that is more
+Much more user friendly!  
+
+Our query is a little boring, lets make a query that is more
 interesting that just "get all entities who have the `:user/email`
 field!
 
@@ -437,22 +465,22 @@ To achieve this we use the following TWO where clauses:
     [?e :user/age ?age]
     [(>= ?age 21)]
 
-The first thing to note about this query is that it contains two
-clauses.  Where clauses are implicitly AND-ed together.  So both
-criteria need to be true.
+The first thing to note about this :where query is that it contains
+two clauses.  Where clauses are implicitly **AND**-ed together.  So both
+criteria need to be true for a given entity to be included in the
+results.
 
 Lets breakdown the first part of the query: 
 
     [?e :user/age ?age]
 
 Remember where clauses are in the format: [entity field-name
-field-value].  As an aside, documentation about datomic refers to this
-as: [entity attribute value].
+field-value] or in datomic nomeclature [entity attribute value].
 
-So this where clause reads like: "Find all entities that have the
-field (attribute) `:user/age`, and stick the entity into the variable
-`?e` and stick the value of the attribute, the actual users age, into
-the variable `?age`.
+The `[?e :user/age ?age]` where clause reads like: "Find all entities
+that have the field (attribute) `:user/age`, and stick the entity into
+the variable `?e` and stick the value of the attribute `:user/age`,
+into the variable `?age`.
 
 So for each entity that meets this criteria will have the entity
 stored in the `?e` variable, and the age in the `?age` variable.  Now
@@ -462,11 +490,13 @@ we can make use of the age value in the second where clause:
 
 Okay this is a special, and super cool variant on normal where
 clauses.  We can run **ANY** function here that returns a boolean
-result.  Well we know the function `>=` is a boolean value returning
-function, so it's legit.  Second, for each entity, the users age will
-be stored in the variable `?age`, so we can simply pass that into the
-function to get our bool result!  This just says, we want entities who
-have an age >= 21.  Simple!
+result.  We know the function `>=` is a boolean value returning
+function, so it's legit.  
+
+Second, for each entity, the users age will be stored in the variable
+`?age`, so we can simply pass the value of that variable into the
+function to get our bool result!  This just says, we want "entities who
+have an age >= 21".  Great!
 
 So here is the full new query:
 
@@ -477,7 +507,8 @@ So here is the full new query:
              [(>= ?age 21)]]
            (d/db @db-conn)))
 
-And now we get the desired result:
+And now we get the desired result, nicely formatted by our pull
+syntax:
 
     datomic-tutorial.core> (query1)
     [[#:user{:email "sally.jones@gmail.com", :age 34}]]
@@ -486,8 +517,8 @@ GIT TAG: query-pull-filter
 
 # Parent Child Data<a id="sec-3" name="sec-3"></a>
 
-Often we have data that owns other data.  For example our first
-example looked like this:
+Often we have data that owns other data.  For example going back to
+our first example, we had:
 
     [{:db/id 1
       :car/make "toyota"
@@ -505,49 +536,50 @@ example looked like this:
       :cars [{:db/id 1}
              {:db/id 2}]}]
 
-So how do we model this?  First we start with the schema.  We'll need
-the fields: `:car/make`, `:car/model`, `:year`, `:user/name`, `:user/age`,
-and `:cars`. 
+This data says ~"ftravers"~, owns two cars, a ~"toyota"~ and a ~"BMW"~
+.  So how do we model this?  First we start with the schema.  We'll
+need to define the fields: `:car/make`, `:car/model`, `:year`,
+`:user/name`, `:user/age`, and `:cars`.
 
 `:car/make`, `:car/model`, and `:user/name` are all of type `string`
 and cardinality one.  For `:year` and `:user/age` we can use integers.
 `:cars` is the new one.  
 
-The field `:cars` has a cardinality of `many` also the type that it
-will hold is of type reference, since we only want to refer to the
-cars already defined in the DB.
+The field `:cars` has a cardinality of `many`; also the type that it
+will hold is of a type that points to other entities.  We'll need a
+type that is like a pointer, reference or link.
 
-Lets look only at the schema for `:cars`, the others you should be
-able to piece together from previous schema examples, or just look at
-the:
+Lets look only at the schema for `:cars`.  You should be able to piece
+together the other fields from previous schema examples, or just look
+at the:
 
 GIT TAG: parent-child-modeling
 
 ## Many Refs Schema<a id="sec-3-1" name="sec-3-1"></a>
 
-For `:cars`, the schema will look like:
+For the `:cars` field, the schema definition will look like:
 
     {:db/doc "List of cars a user owns"
-        :db/id #db/id[:db.part/db]
-        :db/ident :cars
-        :db/valueType :db.type/ref
-        :db/cardinality :db.cardinality/many
-        :db.install/_attribute :db.part/db}
+     :db/id #db/id[:db.part/db]
+     :db/ident :cars
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/many
+     :db.install/_attribute :db.part/db}
 
-Take special not of the values for `cardinality` and `valueType` that
-we've used.  
+Take special note of the values for `cardinality` and `valueType`.  
 
-A `valueType` of `ref` means we want this field to hold references to
-other entities in the DB.  This is the critical difference between a
-database and regular old clojure data structures that don't really
-support references.
+We have used a `valueType` of `:db.type/ref`.  This is how we point to
+(refer/link) to other entities in the DB.  This is the critical
+difference between a database and regular old clojure data structures
+that don't support references.
 
-The second thing to note is the `cardinality` is `many`.  That means
-this field will hold a list of values, not just a single value.
+The second thing to note is that the `cardinality` is set to `many`.
+That means this field will hold a list of values, not just a single
+value.
 
 ## Testdata<a id="sec-3-2" name="sec-3-2"></a>
 
-Now lets make some testdata we can transaction into the DB:
+Now lets make some testdata that can be transacted into the DB:
 
     (def test-data
       [{:db/id #db/id[:db.part/user -1]
@@ -568,8 +600,8 @@ Now lets make some testdata we can transaction into the DB:
 
 GIT TAG: parent-child-modeling
 
-So now we've stuffed some parent/child data into the DB, lets see how
-to get it out in a nice way.
+Now that we have some parent/child data in the DB, lets see how to
+query and display it nicely.
 
 ## Querying Parent Child Data<a id="sec-3-3" name="sec-3-3"></a>
 
@@ -579,8 +611,10 @@ looks like:
     [?e :user/name "ftravers"]
 
 This reads: "find all the entities that have the `:user/name`
-attribute (field) who's value is: ~"ftravers"~.  Now lets do some magic
-with the pull syntax to get the data out how we want it.
+attribute that has as it's value `ftravers`".  
+
+Now lets demonstrate how to format the results nicely with a slightly
+more advance pull pattern.
 
 ## Parent Child Pull Syntax<a id="sec-3-4" name="sec-3-4"></a>
 
@@ -589,8 +623,8 @@ pattern:
 
     (pull ?e [:user/name :user/age])
 
-retrieves the `:user/name` and `:user/age` fields from the found
-entity/entities.  Again the result looks like this:
+retrieves the `:user/name` and `:user/age` fields from the found,
+`?e`, entity/entities.  Again the result of this look like:
 
     datomic-tutorial.core> (query1)
     [[#:user{:name "ftravers", :age 54}]]
@@ -608,12 +642,11 @@ So we want more than just the simple fields that an entity has, but we
 want to follow any references it has to other entities and get values
 from those entities.
 
-To get the above we change the query to look like:
+To get the above we change the pull pattern to be:
 
-    (pull ?e
-          [:user/name
-           :user/age
-           {:cars [:car/make :car/model]}])
+    [:user/name
+     :user/age
+     {:cars [:car/make :car/model]}]
 
 So to get the children, and print out their fields, you start a new
 map, whose key is the parent field that points to the child.  In our
@@ -633,17 +666,15 @@ And this would produce a result like:
     [[1 ftravers 54 "toyota" "tacoma" 2013]
      [1 ftravers 54 "BMW" "325xi" 2001]]
 
-for comparison equivalent datalog:
+for comparison the equivalent datalog is:
 
-    '[:find
-      (pull ?e
-            [:user/name
-             :user/age
-             {:cars [:car/make :car/model]}])
-      :where
-      [?e :user/name "ftravers"]]
+    '[:find (pull ?e
+                  [:user/name
+                   :user/age
+                   {:cars [:car/make :car/model]}])
+      :where [?e :user/name "ftravers"]]
 
-and its result:
+and its result, is nicely normalized:
 
     [[{:user/name "ftravers",
        :user/age 54,
