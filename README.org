@@ -46,7 +46,7 @@ another entity, or as in this case, multiple other entities.
 Entity's (maps) in datomic, like idiomatic clojure, use keywords for
 it's keys (fields).
 
-Looking at all three records (maps, entities), in our sample database
+Looking at all three records (maps/entities), in our sample database
 we can see that the collective set of keys (fields) used are:
 
 #+BEGIN_SRC clojure
