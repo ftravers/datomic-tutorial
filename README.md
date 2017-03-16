@@ -82,8 +82,8 @@ another entity, or as in this case, multiple other entities.
 
 ## Map Fields<a id="sec-1-2" name="sec-1-2"></a>
 
-So datomic can be thought of as a vector of maps.  Each map has
-fields, or keys, and like idiomatic clojure, keywords are used.  
+Entity's (maps) in datomic, like idiomatic clojure, use keywords for
+it's keys (fields).
 
 Looking at all three records (maps, entities), in our sample database
 we can see that the collective set of keys (fields) used are:
