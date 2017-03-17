@@ -82,8 +82,8 @@ another entity, or as in this case, multiple other entities.
 
 ## Map Fields<a id="sec-1-2" name="sec-1-2"></a>
 
-Entity's (maps) in datomic, like idiomatic clojure, use keywords for
-it's keys (fields).
+Entities (maps) in datomic, like idiomatic clojure, use keywords for
+its keys (fields).
 
 Looking at all three records (maps/entities), in our sample database
 we can see that the collective set of keys (fields) used are:
@@ -128,7 +128,7 @@ Again, we can only use fields that have been predefined (the schema),
 but other than that, we can create maps with any combinations of those
 fields.  We'll revist this idea later on.
 
-Okay enough concepts, lets see how to define a field.
+Okay enough concepts, let's see how to define a field.
 
 ## Basic Schema<a id="sec-1-3" name="sec-1-3"></a>
 
@@ -153,7 +153,7 @@ we use the `string` datatype to store an email string.
 this field hold a single item or a list of items.
 
 Those are the important fields to understand conceptually. `:db/doc`
-is a documentation string, remember everything in datomic needs it's
+is a documentation string, remember everything in datomic needs its
 own `:db/id`, and `:db.install/_attribute` instructs datomic to treat
 this data as schema field creation data.
 
@@ -171,9 +171,9 @@ transacting it like so:
 
 ## Testdata<a id="sec-1-4" name="sec-1-4"></a>
 
-Now that we've defined a field, lets make use of it by
+Now that we've defined a field, let's make use of it by
 creating/inserting an entity that makes use of the newly created
-field.  Remember data inside datomic is just a map, so lets just
+field.  Remember data inside datomic is just a map, so let's just
 create that map:
 
     (def test-data
@@ -192,7 +192,7 @@ The -1 could be any negative number, and is like our fake temporary
 id.  Datomic will, upon inserting this record (entity/map), create the
 real permanent datomic id, `:db/id`.
 
-Lets transact this data into the DB:
+Let's transact this data into the DB:
 
     (d/transact @db-conn test-data)
 
@@ -218,8 +218,8 @@ GIT TAG: basic-schema-insert
 
 Okay a DB with only one record (row/entity/map) in it is pretty
 boring.  Also a db with only one string column (field) is next to
-useless!  Lets create a DB with two entities (records/maps) in it.
-Also lets create a second field, age, so we can query the database for
+useless!  Let's create a DB with two entities (records/maps) in it.
+Also let's create a second field, age, so we can query the database for
 people 21 and older!
 
 The schema:
@@ -240,7 +240,7 @@ The schema:
         :db.install/_attribute :db.part/db}])
 
 So we've added another field, age, that is type: `:db.type/long`.  Now
-lets add some actual data:
+let's add some actual data:
 
     (def test-data
       [{:db/id #db/id[:db.part/user -1]
@@ -280,7 +280,7 @@ field.  This means, ANY entity (map), which has the `:user/age` field
 will be included in our query.  This is a very important idea which we
 will revisit later to re-inforce.
 
-Lets reinforce this concept.  When maps use the same field, then any
+Let's reinforce this concept.  When maps use the same field, then any
 query on that field will pull in those maps.  It **doesn't** matter if
 they have **ANY** other fields in common.
 
@@ -305,7 +305,7 @@ unneccessary restrictions IMO, is always a good thing.
 ## Breaking down a datomic query<a id="sec-2-2" name="sec-2-2"></a>
 
 A query takes *datalog* for its first argument and a *database* to
-execute that datalog on, as the second argument.  Lets just look at
+execute that datalog on, as the second argument.  Let's just look at
 the datalog part first:
 
     [:find ?e
@@ -322,7 +322,7 @@ the `WHERE` clause in SQL.
 
 The `:find` part, is basically dictates what to show from the found
 records.  So this naturally corresponds to the `SELECT` part of SQL.
-Lets focus on the `:where` part first.
+Let's focus on the `:where` part first.
 
 Where clauses take one or more vector clauses that are of the form:
 
@@ -433,7 +433,7 @@ The way to understand pull syntax is that the first argument is the
 entity that you want to apply a pull pattern to.  The second part is
 the **pull pattern**.  
 
-Lets remind ourselves of the shape of the data in the DB:
+Let's remind ourselves of the shape of the data in the DB:
 
     (def test-data
       [{:db/id #db/id[:db.part/user -1]
@@ -454,11 +454,11 @@ again the result of the pull syntax:
 
 Much more user friendly!  
 
-Our query is a little boring, lets make a query that is more
+Our query is a little boring, let's make a query that is more
 interesting that just "get all entities who have the `:user/email`
 field!
 
-Lets modify this query to only return people who are 21 and over.
+Let's modify this query to only return people who are 21 and over.
 Franklin, you aren't allowed to drink!
 
 To achieve this we use the following TWO where clauses:
@@ -472,7 +472,7 @@ two clauses.  Where clauses are implicitly **AND**-ed together.  So both
 criteria need to be true for a given entity to be included in the
 results.
 
-Lets breakdown the first part of the query: 
+Let's breakdown the first part of the query: 
 
     [?e :user/age ?age]
 
@@ -493,7 +493,7 @@ we can make use of the age value in the second where clause:
 Okay this is a special, and super cool variant on normal where
 clauses.  We can run **ANY** function here that returns a boolean
 result.  We know the function `>=` is a boolean value returning
-function, so it's legit.  
+function, so its legit.  
 
 Second, for each entity, the users age will be stored in the variable
 `?age`, so we can simply pass the value of that variable into the
@@ -551,7 +551,7 @@ The field `:cars` has a cardinality of `many`; also the type that it
 will hold is of a type that points to other entities.  We'll need a
 type that is like a pointer, reference or link.
 
-Lets look only at the schema for `:cars`.  You should be able to piece
+Let's look only at the schema for `:cars`.  You should be able to piece
 together the other fields from previous schema examples, or just look
 at the:
 
@@ -581,7 +581,7 @@ value.
 
 ## Testdata<a id="sec-3-2" name="sec-3-2"></a>
 
-Now lets make some testdata that can be transacted into the DB:
+Now let's make some testdata that can be transacted into the DB:
 
     (def test-data
       [{:db/id #db/id[:db.part/user -1]
@@ -602,7 +602,7 @@ Now lets make some testdata that can be transacted into the DB:
 
 GIT TAG: parent-child-modeling
 
-Now that we have some parent/child data in the DB, lets see how to
+Now that we have some parent/child data in the DB, let's see how to
 query and display it nicely.
 
 ## Querying Parent Child Data<a id="sec-3-3" name="sec-3-3"></a>
@@ -613,9 +613,9 @@ looks like:
     [?e :user/name "ftravers"]
 
 This reads: "find all the entities that have the `:user/name`
-attribute that has as it's value `ftravers`".  
+attribute that has as its value `ftravers`".  
 
-Now lets demonstrate how to format the results nicely with a slightly
+Now let's demonstrate how to format the results nicely with a slightly
 more advance pull pattern.
 
 ## Parent Child Pull Syntax<a id="sec-3-4" name="sec-3-4"></a>
@@ -710,5 +710,5 @@ In RDBMS you normally are only ever comparing things that exist in the
 same table.  So it'd be awkward to try a similar thing in an RDBMS.
 Primarily because they wouldn't have a combined index for fields in
 two separate tables.  So your performance would die.  In datomic each
-field has it's own index, so a query like the above, would still be
+field has its own index, so a query like the above, would still be
 performant.
