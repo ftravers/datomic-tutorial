@@ -274,7 +274,7 @@ the same query to, well there isn't a reasonable way to do that.
 
 Often you'll find rows in an RDBMS that have ~null~ values, because
 for whatever reason, for those rows, having a value in that column
-doesn't make sense.  This sometimes becomes a problem with modelling
+doesn't make sense.  This sometimes becomes a problem with modeling
 data in an RDBMS.  If you have objects that have some fields in common
 but not other fields, you often have to break this up into multiple
 tables, and life gets complex.  Like you might have a user table, an
@@ -282,8 +282,8 @@ administrator table, a customer table, a person table, etc...  This
 rigidity of RDBMS, can often make modeling data very counter-intuitive.
 
 What do we gain by having this restriction?  I would argue nothing.
-So as a concequence datomic does away with this needless restriction.
-Removing unneccessary restrictions IMO, is always a good thing.
+Datomic does away with this needless restriction of tables.  Removing
+unneccessary restrictions IMO, is always a good thing.
 
 ** Breaking down a datomic query
 
