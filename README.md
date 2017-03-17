@@ -284,15 +284,19 @@ Lets reinforce this concept.  When maps use the same field, then any
 query on that field will pull in those maps.  It **doesn't** matter if
 they have **ANY** other fields in common.
 
-Contrast this with an RDBMS.  First of all, all rows that belong
-to a given table will by definition have **ALL** the same exact fields.
-Second, if you have rows in other tables, there isn't a reasonable way
-to include them in the query.
+Contrast this with an RDBMS.  First of all, all rows that belong to a
+given table will by definition have **ALL** the same exact fields.
+Second, if you had a column in another table that you'd like to apply
+the same query to, well there isn't a reasonable way to do that.
 
 Often you'll find rows in an RDBMS that have `null` values, because
 for whatever reason, for those rows, having a value in that column
-doesn't make sense.  This rigidity of RDBMS, that all rows are forced
-to have values, even if it is just `null`, for all of the columns.
+doesn't make sense.  This sometimes becomes a problem with modelling
+data in an RDBMS.  If you have objects that have some fields in common
+but not other fields, you often have to break this up into multiple
+tables, and life gets complex.  Like you might have a user table, an
+administrator table, a customer table, a person table, etc&#x2026;  This
+rigidity of RDBMS, can often make modeling data very counter-intuitive.
 
 What do we gain by having this restriction?  I would argue nothing.
 So as a concequence datomic does away with this needless restriction.
