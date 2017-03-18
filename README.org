@@ -1,4 +1,3 @@
-
 * Datomic Tutorial
 ** Data Shape
 
@@ -558,7 +557,7 @@ our first example, we had:
            {:db/id 2}]}]
 #+END_SRC
 
-This data says ~"ftravers"~, owns two cars, a ~"toyota"~ and a ~"BMW"~
+This data says ~ftravers~, owns two cars, a ~toyota~ and a ~BMW~
 .  So how do we model this?  First we start with the schema.  We'll
 need to define the fields: ~:car/make~, ~:car/model~, ~:year~,
 ~:user/name~, ~:user/age~, and ~:cars~.

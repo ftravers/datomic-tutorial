@@ -38,9 +38,6 @@
 </div>
 </div>
 
-\#+TITLE A Datomic Tutorial
-\\#+AUTHOR Fenton Travers
-
 # Datomic Tutorial<a id="sec-1" name="sec-1"></a>
 
 ## Data Shape<a id="sec-1-1" name="sec-1-1"></a>
@@ -541,7 +538,7 @@ our first example, we had:
       :cars [{:db/id 1}
              {:db/id 2}]}]
 
-This data says ~"ftravers"~, owns two cars, a ~"toyota"~ and a ~"BMW"~
+This data says `ftravers`, owns two cars, a `toyota` and a `BMW`
 .  So how do we model this?  First we start with the schema.  We'll
 need to define the fields: `:car/make`, `:car/model`, `:year`,
 `:user/name`, `:user/age`, and `:cars`.
