@@ -455,7 +455,7 @@ again the result of the pull syntax:
 Much more user friendly!  
 
 Our query is a little boring, let's make a query that is more
-interesting that just "get all entities who have the `:user/email`
+interesting than just "get all entities who have the `:user/email`
 field!
 
 Let's modify this query to only return people who are 21 and over.
