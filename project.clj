@@ -1,5 +1,5 @@
 (defproject datomic-tutorial "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
+  :description "Cubic Zirconia Tutorials - Small, detailed, clear and cheap.  The Datomic Tutorial"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}

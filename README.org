@@ -1,4 +1,5 @@
-* A Datomic Tutorial
+
+* Datomic Tutorial
 ** Data Shape
 
 You can think about the data that is stored in datomic as just a bunch

@@ -2,7 +2,7 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#sec-1">1. A Datomic Tutorial</a>
+<li><a href="#sec-1">1. Datomic Tutorial</a>
 <ul>
 <li><a href="#sec-1-1">1.1. Data Shape</a></li>
 <li><a href="#sec-1-2">1.2. Map Fields</a></li>
@@ -38,7 +38,10 @@
 </div>
 </div>
 
-# A Datomic Tutorial<a id="sec-1" name="sec-1"></a>
+\#+TITLE A Datomic Tutorial
+\\#+AUTHOR Fenton Travers
+
+# Datomic Tutorial<a id="sec-1" name="sec-1"></a>
 
 ## Data Shape<a id="sec-1-1" name="sec-1-1"></a>
 
