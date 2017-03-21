@@ -1,4 +1,13 @@
+* About Cubic Zirconia Tutorials
+
+Cubic Zirconia are small, clear, detailed and cheap.  This tutorial
+aims to have the same characteristics.
+
 * Datomic Tutorial
+
+This tutorial was written for Datomic version: 0.9.5561, which was
+released on February 13, 2017. 
+
 ** Data Shape
 
 You can think about the data that is stored in datomic as just a bunch
@@ -31,7 +40,7 @@ datomic database:
 So this datomic database has 3 entries (entities/maps/rows).  A user,
 ~ftravers~, who owns 2 cars.  
 
-Every map (entity) must have a ~:db/id~.  This is what uniquely
+Every map (entity) will get a ~:db/id~.  This is what uniquely
 identifies that entity to datomic.  Datomic ~:db/id~'s are actually
 very large integers, so the data above is actually a bit fake, but I
 keep it simple to communicate the concept.
@@ -91,6 +100,13 @@ Again, we can only use fields that have been predefined (the schema),
 but other than that, we can create maps with any combinations of those
 fields.  We'll revist this idea later on.
 
+One more note, I've used both namespace qualified keyword fields like:
+~:user/name~ and non-namespace qualified keyword fields like:
+~:cars~.  I do this just to show that the keywords dont need to be
+namespace qualified, but it is best practice to do so.  Why you may
+ask? One person suggested that they can be easier to refactor since
+they are more specific.
+
 Okay enough concepts, let's see how to define a field.
 
 ** Basic Schema
@@ -101,7 +117,6 @@ with creating just one field.  This field will /hold/ an email value.
 #+BEGIN_SRC clojure
   (def schema
     [{:db/doc "A users email."
-      :db/id #db/id[:db.part/db]
       :db/ident :user/email
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
@@ -118,9 +133,8 @@ we use the ~string~ datatype to store an email string.
 this field hold a single item or a list of items.
 
 Those are the important fields to understand conceptually. ~:db/doc~
-is a documentation string, remember everything in datomic needs its
-own ~:db/id~, and ~:db.install/_attribute~ instructs datomic to treat
-this data as schema field creation data.
+is a documentation string, ~:db.install/_attribute~ instructs datomic
+to treat this data as schema field creation data.
 
 Before we can start adding schema to a database, we need to create the
 database!
@@ -147,23 +161,8 @@ create that map:
 
 #+BEGIN_SRC clojure
   (def test-data
-    [{:db/id #db/id[:db.part/user -1]
-      :user/email "fenton.travers@gmail.com"}])
+    [{:user/email "fenton.travers@gmail.com"}])
 #+END_SRC
-
-So the ~:user/email~ part is understandable, but whats that other
-field ~:db/id~ all about?  Remember whenever we add data into datomic
-we need to create and give the entity a ~:db/id~.  The part that looks
-like: 
-
-#+BEGIN_SRC clojure
-#db/id[:db.part/user -1]
-#+END_SRC
-
-is basically asking datomic to replace this with a valid ~:db/id~.
-The -1 could be any negative number, and is like our fake temporary
-id.  Datomic will, upon inserting this record (entity/map), create the
-real permanent datomic id, ~:db/id~.
 
 Let's transact this data into the DB:
 
@@ -204,14 +203,12 @@ The schema:
 #+BEGIN_SRC clojure
   (def schema
     [{:db/doc "A users email."
-      :db/id #db/id[:db.part/db]
       :db/ident :user/email
       :db/valueType :db.type/string
       :db/cardinality :db.cardinality/one
       :db.install/_attribute :db.part/db}
 
      {:db/doc "A users age."
-      :db/id #db/id[:db.part/db]
       :db/ident :user/age
       :db/valueType :db.type/long
       :db/cardinality :db.cardinality/one
@@ -223,19 +220,14 @@ let's add some actual data:
 
 #+BEGIN_SRC clojure
   (def test-data
-    [{:db/id #db/id[:db.part/user -1]
-      :user/email "sally.jones@gmail.com"
+    [{:user/email "sally.jones@gmail.com"
       :user/age 34}
 
-     {:db/id #db/id[:db.part/user -2]
-      :user/email "franklin.rosevelt@gmail.com"
+     {:user/email "franklin.rosevelt@gmail.com"
       :user/age 14}])
 #+END_SRC
 
 GIT TAG: better-testdata
-
-Notice we need to specify a unique number for each entity in our
-batch, so franklin's temp ~:db/id~ is -2, while sally's is -1.
 
 *REMEMBER* to transact this schema and testdata into your cleaned up
 DB!  Otherwise you'll get an error for trying to add the ~:user/email~
@@ -373,12 +365,10 @@ original data we trasacted into the DB:
 
 #+BEGIN_SRC clojure
   (def test-data
-    [{:db/id #db/id[:db.part/user -1]
-      :user/email "sally.jones@gmail.com"
+    [{:user/email "sally.jones@gmail.com"
       :user/age 34}
 
-     {:db/id #db/id[:db.part/user -2]
-      :user/email "franklin.rosevelt@gmail.com"
+     {:user/email "franklin.rosevelt@gmail.com"
       :user/age 14}])
 #+END_SRC
 
@@ -440,12 +430,10 @@ Let's remind ourselves of the shape of the data in the DB:
 
 #+BEGIN_SRC clojure
   (def test-data
-    [{:db/id #db/id[:db.part/user -1]
-      :user/email "sally.jones@gmail.com"
+    [{:user/email "sally.jones@gmail.com"
       :user/age 34}
 
-     {:db/id #db/id[:db.part/user -2]
-      :user/email "franklin.rosevelt@gmail.com"
+     {:user/email "franklin.rosevelt@gmail.com"
       :user/age 14}])
 #+END_SRC
 
@@ -537,15 +525,15 @@ GIT TAG: query-pull-filter
 * Parent Child Data
 
 Often we have data that owns other data.  For example going back to
-our first example, we had:
+our slightly modified first example:
 
 #+BEGIN_SRC clojure
-  [{:db/id 1
+  [{:db/id "taco"
     :car/make "toyota"
     :car/model "tacoma"
     :year 2014}
 
-   {:db/id 2
+   {:db/id "325"
     :car/make "BMW"
     :car/model "325xi"
     :year 2001}
@@ -553,9 +541,14 @@ our first example, we had:
    {:db/id 3
     :user/name "ftravers"
     :user/age 54
-    :cars [{:db/id 1}
-           {:db/id 2}]}]
+    :cars [{:db/id "taco"}
+           {:db/id "325"}]}]
 #+END_SRC
+
+Because the ~ftravers~ entity map needs to refer to the ~toyota~ and
+~BMW~ entity maps, we include a ~:db/id~ field.  You can put in any
+string here for your convenience.  After transacting into datomic,
+they'll get converted to large integers as we've seen before.
 
 This data says ~ftravers~, owns two cars, a ~toyota~ and a ~BMW~
 .  So how do we model this?  First we start with the schema.  We'll
@@ -582,7 +575,6 @@ For the ~:cars~ field, the schema definition will look like:
 
 #+BEGIN_SRC clojure
   {:db/doc "List of cars a user owns"
-   :db/id #db/id[:db.part/db]
    :db/ident :cars
    :db/valueType :db.type/ref
    :db/cardinality :db.cardinality/many
@@ -605,22 +597,22 @@ value.
 Now let's make some testdata that can be transacted into the DB:
 
 #+BEGIN_SRC clojure
-(def test-data
-  [{:db/id #db/id[:db.part/user -1]
-    :car/make "toyota"
-    :car/model "tacoma"
-    :year 2014}
+  (def test-data
+    [{:db/id "taco"
+      :car/make "toyota"
+      :car/model "tacoma"
+      :year 2014}
 
-   {:db/id #db/id[:db.part/user -2]
-    :car/make "BMW"
-    :car/model "325xi"
-    :year 2001}
+     {:db/id "325"
+      :car/make "BMW"
+      :car/model "325xi"
+      :year 2001}
 
-   {:db/id #db/id[:db.part/user -3]
-    :user/name "ftravers"
-    :user/age 54
-    :cars [{:db/id #db/id[:db.part/user -1]}
-           {:db/id #db/id[:db.part/user -2]}]}])
+     {:db/id 3
+      :user/name "ftravers"
+      :user/age 54
+      :cars [{:db/id "taco"}
+             {:db/id "325"}]}])
 #+END_SRC
 
 GIT TAG: parent-child-modeling
