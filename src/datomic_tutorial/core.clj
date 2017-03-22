@@ -5,24 +5,64 @@
 
 (def db-conn (atom (d/connect db-url)))
 
-(def schema [{:db/doc "A users email."
-              :db/ident :user/email
+(def schema [{:db/doc "The username."
+              :db/id #db/id[:db.part/db]
+              :db/ident :user/name
               :db/valueType :db.type/string
               :db/cardinality :db.cardinality/one
               :db.install/_attribute :db.part/db}
 
-             {:db/doc "A users age."
+             {:db/doc "List of cars a user owns"
+              :db/id #db/id[:db.part/db]
+              :db/ident :cars
+              :db/valueType :db.type/ref
+              :db/cardinality :db.cardinality/many
+              :db.install/_attribute :db.part/db}
+
+             {:db/doc "Car make"
+              :db/id #db/id[:db.part/db]
+              :db/ident :car/make
+              :db/valueType :db.type/string
+              :db/cardinality :db.cardinality/one
+              :db.install/_attribute :db.part/db}
+
+             {:db/doc "Car model"
+              :db/id #db/id[:db.part/db]
+              :db/ident :car/model
+              :db/valueType :db.type/string
+              :db/cardinality :db.cardinality/one
+              :db.install/_attribute :db.part/db}
+
+             {:db/doc "Year"
+              :db/id #db/id[:db.part/db]
+              :db/ident :year
+              :db/valueType :db.type/long
+              :db/cardinality :db.cardinality/one
+              :db.install/_attribute :db.part/db}
+
+             {:db/doc "Person age"
+              :db/id #db/id[:db.part/db]
               :db/ident :user/age
               :db/valueType :db.type/long
               :db/cardinality :db.cardinality/one
               :db.install/_attribute :db.part/db}])
 
 (def test-data
-  [{:user/email "sally.jones@gmail.com"
-    :user/age 34}
+  [{:db/id #db/id[:db.part/user -1]
+    :car/make "toyota"
+    :car/model "tacoma"
+    :year 2014}
 
-   {:user/email "franklin.rosevelt@gmail.com"
-    :user/age 14}])
+   {:db/id #db/id[:db.part/user -2]
+    :car/make "BMW"
+    :car/model "325xi"
+    :year 2001}
+
+   {:db/id #db/id[:db.part/user -3]
+    :user/name "ftravers"
+    :user/age 54
+    :cars [{:db/id #db/id[:db.part/user -1]}
+           {:db/id #db/id[:db.part/user -2]}]}])
 
 (defn reload-dbs []
   (d/delete-database db-url)
@@ -32,6 +72,11 @@
   (d/transact @db-conn test-data))
 
 (defn query1 []
-  (d/q '[:find ?e
-         :where [?e :user/email]]
+  (d/q '[:find
+         (pull ?e
+               [:user/name
+                :user/age
+                {:cars [:car/make :car/model]}])
+         :where
+         [?e :user/name "ftravers"]]
        (d/db @db-conn)))
