@@ -31,3 +31,7 @@
   (d/transact @db-conn schema)
   (d/transact @db-conn test-data))
 
+(defn query1 []
+  (d/q '[:find ?e
+         :where [?e :user/email]]
+       (d/db @db-conn)))
