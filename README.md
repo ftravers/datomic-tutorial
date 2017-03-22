@@ -2,45 +2,56 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#sec-1">1. Datomic Tutorial</a>
+<li><a href="#sec-1">1. About Missing Link Tutorials</a></li>
+<li><a href="#sec-2">2. Datomic Tutorial</a>
 <ul>
-<li><a href="#sec-1-1">1.1. Data Shape</a></li>
-<li><a href="#sec-1-2">1.2. Map Fields</a></li>
-<li><a href="#sec-1-3">1.3. Basic Schema</a></li>
-<li><a href="#sec-1-4">1.4. Testdata</a></li>
-<li><a href="#sec-1-5">1.5. Blow away and recreate DB</a></li>
-<li><a href="#sec-1-6">1.6. Better Testdata</a></li>
+<li><a href="#sec-2-1">2.1. Data Shape</a></li>
+<li><a href="#sec-2-2">2.2. Map Fields</a></li>
+<li><a href="#sec-2-3">2.3. Basic Schema</a></li>
+<li><a href="#sec-2-4">2.4. Testdata</a></li>
+<li><a href="#sec-2-5">2.5. Blow away and recreate DB</a></li>
+<li><a href="#sec-2-6">2.6. Better Testdata</a></li>
 </ul>
 </li>
-<li><a href="#sec-2">2. Query the database</a>
+<li><a href="#sec-3">3. Query the database</a>
 <ul>
-<li><a href="#sec-2-1">2.1. Concept</a></li>
-<li><a href="#sec-2-2">2.2. Breaking down a datomic query</a></li>
-<li><a href="#sec-2-3">2.3. Datalog :where</a></li>
-<li><a href="#sec-2-4">2.4. Datalog :find</a></li>
-<li><a href="#sec-2-5">2.5. Pull Syntax</a></li>
+<li><a href="#sec-3-1">3.1. Concept</a></li>
+<li><a href="#sec-3-2">3.2. Breaking down a datomic query</a></li>
+<li><a href="#sec-3-3">3.3. Datalog :where</a></li>
+<li><a href="#sec-3-4">3.4. Datalog :find</a></li>
+<li><a href="#sec-3-5">3.5. Pull Syntax</a></li>
 </ul>
 </li>
-<li><a href="#sec-3">3. Parent Child Data</a>
+<li><a href="#sec-4">4. Parent Child Data</a>
 <ul>
-<li><a href="#sec-3-1">3.1. Many Refs Schema</a></li>
-<li><a href="#sec-3-2">3.2. Testdata</a></li>
-<li><a href="#sec-3-3">3.3. Querying Parent Child Data</a></li>
-<li><a href="#sec-3-4">3.4. Parent Child Pull Syntax</a></li>
+<li><a href="#sec-4-1">4.1. Many Refs Schema</a></li>
+<li><a href="#sec-4-2">4.2. Testdata</a></li>
+<li><a href="#sec-4-3">4.3. Querying Parent Child Data</a></li>
+<li><a href="#sec-4-4">4.4. Parent Child Pull Syntax</a></li>
 </ul>
 </li>
-<li><a href="#sec-4">4. Deeper Understanding</a>
+<li><a href="#sec-5">5. Deeper Understanding</a>
 <ul>
-<li><a href="#sec-4-1">4.1. Fields cross SQL Table boundaries</a></li>
+<li><a href="#sec-5-1">5.1. Fields cross SQL Table boundaries</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
 
-# Datomic Tutorial<a id="sec-1" name="sec-1"></a>
+# About Missing Link Tutorials<a id="sec-1" name="sec-1"></a>
 
-## Data Shape<a id="sec-1-1" name="sec-1-1"></a>
+I find a lot of technology doesn't have documentation that I can
+relate to.  The style of Missing Link Tutorials is to be clear,
+succint, easy, and to cover concepts and essential practical aspects
+of the topic.  Without further ado&#x2026;
+
+# Datomic Tutorial<a id="sec-2" name="sec-2"></a>
+
+This tutorial was written for Datomic version: 0.9.5561, which was
+released on February 13, 2017. 
+
+## Data Shape<a id="sec-2-1" name="sec-2-1"></a>
 
 You can think about the data that is stored in datomic as just a bunch
 of maps.  Datomic doesn't have tables, like a relational database.
@@ -70,7 +81,7 @@ datomic database:
 So this datomic database has 3 entries (entities/maps/rows).  A user,
 `ftravers`, who owns 2 cars.  
 
-Every map (entity) must have a `:db/id`.  This is what uniquely
+Every map (entity) will get a `:db/id`.  This is what uniquely
 identifies that entity to datomic.  Datomic `:db/id`'s are actually
 very large integers, so the data above is actually a bit fake, but I
 keep it simple to communicate the concept.
@@ -80,7 +91,7 @@ user `ftravers` points (refers/links) to the cars he owns using the
 `:db/id` field.  The `:db/id` field allows one entity to refer to
 another entity, or as in this case, multiple other entities.
 
-## Map Fields<a id="sec-1-2" name="sec-1-2"></a>
+## Map Fields<a id="sec-2-2" name="sec-2-2"></a>
 
 Entities (maps) in datomic, like idiomatic clojure, use keywords for
 its keys (fields).
@@ -128,16 +139,22 @@ Again, we can only use fields that have been predefined (the schema),
 but other than that, we can create maps with any combinations of those
 fields.  We'll revist this idea later on.
 
+One more note, I've used both namespace qualified keyword fields like:
+`:user/name` and non-namespace qualified keyword fields like:
+`:cars`.  I do this just to show that the keywords dont need to be
+namespace qualified, but it is best practice to do so.  Why you may
+ask? One person suggested that they can be easier to refactor since
+they are more specific.
+
 Okay enough concepts, let's see how to define a field.
 
-## Basic Schema<a id="sec-1-3" name="sec-1-3"></a>
+## Basic Schema<a id="sec-2-3" name="sec-2-3"></a>
 
 Here we create a field (define an attribute) in datomic.  We'll start
 with creating just one field.  This field will *hold* an email value.
 
     (def schema
       [{:db/doc "A users email."
-        :db/id #db/id[:db.part/db]
         :db/ident :user/email
         :db/valueType :db.type/string
         :db/cardinality :db.cardinality/one
@@ -153,9 +170,8 @@ we use the `string` datatype to store an email string.
 this field hold a single item or a list of items.
 
 Those are the important fields to understand conceptually. `:db/doc`
-is a documentation string, remember everything in datomic needs its
-own `:db/id`, and `:db.install/_attribute` instructs datomic to treat
-this data as schema field creation data.
+is a documentation string, `:db.install/_attribute` instructs datomic
+to treat this data as schema field creation data.
 
 Before we can start adding schema to a database, we need to create the
 database!
@@ -169,7 +185,7 @@ transacting it like so:
 
     (d/transact @db-conn schema)
 
-## Testdata<a id="sec-1-4" name="sec-1-4"></a>
+## Testdata<a id="sec-2-4" name="sec-2-4"></a>
 
 Now that we've defined a field, let's make use of it by
 creating/inserting an entity that makes use of the newly created
@@ -177,26 +193,13 @@ field.  Remember data inside datomic is just a map, so let's just
 create that map:
 
     (def test-data
-      [{:db/id #db/id[:db.part/user -1]
-        :user/email "fenton.travers@gmail.com"}])
-
-So the `:user/email` part is understandable, but whats that other
-field `:db/id` all about?  Remember whenever we add data into datomic
-we need to create and give the entity a `:db/id`.  The part that looks
-like: 
-
-    #db/id[:db.part/user -1]
-
-is basically asking datomic to replace this with a valid `:db/id`.
-The -1 could be any negative number, and is like our fake temporary
-id.  Datomic will, upon inserting this record (entity/map), create the
-real permanent datomic id, `:db/id`.
+      [{:user/email "fred.jones@gmail.com"}])
 
 Let's transact this data into the DB:
 
     (d/transact @db-conn test-data)
 
-## Blow away and recreate DB<a id="sec-1-5" name="sec-1-5"></a>
+## Blow away and recreate DB<a id="sec-2-5" name="sec-2-5"></a>
 
 When experimenting with datomic, I like to blow the database away, so
 I know I'm starting with a clean slate each time.
@@ -212,9 +215,9 @@ transact the schema and testdata.
 
 Working code can be found under the 
 
-GIT TAG: basic-schema-insert
+GIT BRANCH: basic-schema-insert
 
-## Better Testdata<a id="sec-1-6" name="sec-1-6"></a>
+## Better Testdata<a id="sec-2-6" name="sec-2-6"></a>
 
 Okay a DB with only one record (row/entity/map) in it is pretty
 boring.  Also a db with only one string column (field) is next to
@@ -226,14 +229,12 @@ The schema:
 
     (def schema
       [{:db/doc "A users email."
-        :db/id #db/id[:db.part/db]
         :db/ident :user/email
         :db/valueType :db.type/string
         :db/cardinality :db.cardinality/one
         :db.install/_attribute :db.part/db}
     
        {:db/doc "A users age."
-        :db/id #db/id[:db.part/db]
         :db/ident :user/age
         :db/valueType :db.type/long
         :db/cardinality :db.cardinality/one
@@ -243,26 +244,21 @@ So we've added another field, age, that is type: `:db.type/long`.  Now
 let's add some actual data:
 
     (def test-data
-      [{:db/id #db/id[:db.part/user -1]
-        :user/email "sally.jones@gmail.com"
+      [{:user/email "sally.jones@gmail.com"
         :user/age 34}
     
-       {:db/id #db/id[:db.part/user -2]
-        :user/email "franklin.rosevelt@gmail.com"
+       {:user/email "franklin.rosevelt@gmail.com"
         :user/age 14}])
 
-GIT TAG: better-testdata
-
-Notice we need to specify a unique number for each entity in our
-batch, so franklin's temp `:db/id` is -2, while sally's is -1.
+GIT BRANCH: better-testdata
 
 **REMEMBER** to transact this schema and testdata into your cleaned up
 DB!  Otherwise you'll get an error for trying to add the `:user/email`
 field twice.
 
-# Query the database<a id="sec-2" name="sec-2"></a>
+# Query the database<a id="sec-3" name="sec-3"></a>
 
-## Concept<a id="sec-2-1" name="sec-2-1"></a>
+## Concept<a id="sec-3-1" name="sec-3-1"></a>
 
 Now we have seen how to add data to datomic, the interesting part is
 the querying of the data.  A query might be: "Give me the users who
@@ -302,7 +298,7 @@ What do we gain by having this restriction?  I would argue nothing.
 Datomic does away with this needless restriction of tables.  Removing
 unneccessary restrictions IMO, is always a good thing.
 
-## Breaking down a datomic query<a id="sec-2-2" name="sec-2-2"></a>
+## Breaking down a datomic query<a id="sec-3-2" name="sec-3-2"></a>
 
 A query takes *datalog* for its first argument and a *database* to
 execute that datalog on, as the second argument.  Let's just look at
@@ -314,7 +310,7 @@ the datalog part first:
 Datalog at a minimum has a `:find` part, and a `:where` part.  First
 we'll examine the where part.
 
-## Datalog :where<a id="sec-2-3" name="sec-2-3"></a>
+## Datalog :where<a id="sec-3-3" name="sec-3-3"></a>
 
 The query (`:where`) part selects (narrows down) the records
 (entities).  This is truly the querying part.  So this corresponds to
@@ -347,7 +343,7 @@ our datalog.
 In summary this query reads like: "Get us all the entities in the DB
 that have the field: `:user/email`.
 
-## Datalog :find<a id="sec-2-4" name="sec-2-4"></a>
+## Datalog :find<a id="sec-3-4" name="sec-3-4"></a>
 
 Finally we have the `:find` part of the datalog.  The correlates
 directly to the `SELECT` aspect of SQL, and it basically indicates
@@ -373,18 +369,16 @@ and the result of running it:
     datomic-tutorial.core> (query1)
     #{[17592186045418] [17592186045419]}
 
-GIT TAG: simple-first-query
+GIT BRANCH: simple-first-query
 
 Hmmm&#x2026;  Okay this is kind of far from what we put in.  Below is the
 original data we trasacted into the DB:
 
     (def test-data
-      [{:db/id #db/id[:db.part/user -1]
-        :user/email "sally.jones@gmail.com"
+      [{:user/email "sally.jones@gmail.com"
         :user/age 34}
     
-       {:db/id #db/id[:db.part/user -2]
-        :user/email "franklin.rosevelt@gmail.com"
+       {:user/email "franklin.rosevelt@gmail.com"
         :user/age 14}])
 
 The numbers returned by the query are the entity id's (`:db/id`) of
@@ -411,7 +405,7 @@ Okay, that is the instinctual approach to extract the data we are
 looking for, but it isn't very elegant.  Now let me introduce a more
 enlightened approach, **pull syntax**!
 
-## Pull Syntax<a id="sec-2-5" name="sec-2-5"></a>
+## Pull Syntax<a id="sec-3-5" name="sec-3-5"></a>
 
 Instead of having the find clause look like:
 
@@ -436,12 +430,10 @@ the **pull pattern**.
 Let's remind ourselves of the shape of the data in the DB:
 
     (def test-data
-      [{:db/id #db/id[:db.part/user -1]
-        :user/email "sally.jones@gmail.com"
+      [{:user/email "sally.jones@gmail.com"
         :user/age 34}
     
-       {:db/id #db/id[:db.part/user -2]
-        :user/email "franklin.rosevelt@gmail.com"
+       {:user/email "franklin.rosevelt@gmail.com"
         :user/age 14}])
 
 The pull pattern we use is: `[:user/email :user/age]`.  Here we
@@ -515,19 +507,19 @@ syntax:
     datomic-tutorial.core> (query1)
     [[#:user{:email "sally.jones@gmail.com", :age 34}]]
 
-GIT TAG: query-pull-filter
+GIT BRANCH: query-pull-filter
 
-# Parent Child Data<a id="sec-3" name="sec-3"></a>
+# Parent Child Data<a id="sec-4" name="sec-4"></a>
 
 Often we have data that owns other data.  For example going back to
-our first example, we had:
+our slightly modified first example:
 
-    [{:db/id 1
+    [{:db/id "taco"
       :car/make "toyota"
       :car/model "tacoma"
       :year 2014}
     
-     {:db/id 2
+     {:db/id "325"
       :car/make "BMW"
       :car/model "325xi"
       :year 2001}
@@ -535,8 +527,13 @@ our first example, we had:
      {:db/id 3
       :user/name "ftravers"
       :user/age 54
-      :cars [{:db/id 1}
-             {:db/id 2}]}]
+      :cars [{:db/id "taco"}
+             {:db/id "325"}]}]
+
+Because the `ftravers` entity map needs to refer to the `toyota` and
+`BMW` entity maps, we include a `:db/id` field.  You can put in any
+string here for your convenience.  After transacting into datomic,
+they'll get converted to large integers as we've seen before.
 
 This data says `ftravers`, owns two cars, a `toyota` and a `BMW`
 .  So how do we model this?  First we start with the schema.  We'll
@@ -555,14 +552,13 @@ Let's look only at the schema for `:cars`.  You should be able to piece
 together the other fields from previous schema examples, or just look
 at the:
 
-GIT TAG: parent-child-modeling
+GIT BRANCH: parent-child-modeling
 
-## Many Refs Schema<a id="sec-3-1" name="sec-3-1"></a>
+## Many Refs Schema<a id="sec-4-1" name="sec-4-1"></a>
 
 For the `:cars` field, the schema definition will look like:
 
     {:db/doc "List of cars a user owns"
-     :db/id #db/id[:db.part/db]
      :db/ident :cars
      :db/valueType :db.type/ref
      :db/cardinality :db.cardinality/many
@@ -579,33 +575,33 @@ The second thing to note is that the `cardinality` is set to `many`.
 That means this field will hold a list of values, not just a single
 value.
 
-## Testdata<a id="sec-3-2" name="sec-3-2"></a>
+## Testdata<a id="sec-4-2" name="sec-4-2"></a>
 
 Now let's make some testdata that can be transacted into the DB:
 
     (def test-data
-      [{:db/id #db/id[:db.part/user -1]
+      [{:db/id "taco"
         :car/make "toyota"
         :car/model "tacoma"
         :year 2014}
     
-       {:db/id #db/id[:db.part/user -2]
+       {:db/id "325"
         :car/make "BMW"
         :car/model "325xi"
         :year 2001}
     
-       {:db/id #db/id[:db.part/user -3]
+       {:db/id 3
         :user/name "ftravers"
         :user/age 54
-        :cars [{:db/id #db/id[:db.part/user -1]}
-               {:db/id #db/id[:db.part/user -2]}]}])
+        :cars [{:db/id "taco"}
+               {:db/id "325"}]}])
 
-GIT TAG: parent-child-modeling
+GIT BRANCH: parent-child-modeling
 
 Now that we have some parent/child data in the DB, let's see how to
 query and display it nicely.
 
-## Querying Parent Child Data<a id="sec-3-3" name="sec-3-3"></a>
+## Querying Parent Child Data<a id="sec-4-3" name="sec-4-3"></a>
 
 First we'll find the record we care about with a where clause that
 looks like:
@@ -618,7 +614,7 @@ attribute that has as its value `ftravers`".
 Now let's demonstrate how to format the results nicely with a slightly
 more advance pull pattern.
 
-## Parent Child Pull Syntax<a id="sec-3-4" name="sec-3-4"></a>
+## Parent Child Pull Syntax<a id="sec-4-4" name="sec-4-4"></a>
 
 We have already learned how to extract entity fields with a basic pull
 pattern:
@@ -684,9 +680,9 @@ and its result, is nicely normalized:
        [#:car{:make "toyota", :model "tacoma"}
         #:car{:make "BMW", :model "325xi"}]}]]
 
-# Deeper Understanding<a id="sec-4" name="sec-4"></a>
+# Deeper Understanding<a id="sec-5" name="sec-5"></a>
 
-## Fields cross SQL Table boundaries<a id="sec-4-1" name="sec-4-1"></a>
+## Fields cross SQL Table boundaries<a id="sec-5-1" name="sec-5-1"></a>
 
 So pretend we have two entities like:
 
