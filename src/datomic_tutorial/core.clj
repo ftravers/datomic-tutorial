@@ -32,6 +32,8 @@
   (d/transact @db-conn test-data))
 
 (defn query1 []
-  (d/q '[:find ?e
-         :where [?e :user/email]]
+  (d/q '[:find (pull ?e [:user/email :user/age])
+         :where
+         [?e :user/age ?age]
+         [(>= ?age 21)]]
        (d/db @db-conn)))
