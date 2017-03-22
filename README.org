@@ -1,7 +1,9 @@
-* About Cubic Zirconia Tutorials
+* About Missing Link Tutorials
 
-Cubic Zirconia are small, clear, detailed and cheap.  This tutorial
-aims to have the same characteristics.
+I find a lot of technology doesn't have documentation that I can
+relate to.  The style of Missing Link Tutorials is to be clear,
+succint, easy, and to cover concepts and essential practical aspects
+of the topic.  Without further ado...
 
 * Datomic Tutorial
 
