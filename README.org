@@ -190,7 +190,7 @@ transact the schema and testdata.
 
 Working code can be found under the 
 
-GIT TAG: basic-schema-insert
+GIT BRANCH: basic-schema-insert
 
 ** Better Testdata
 
@@ -229,7 +229,7 @@ let's add some actual data:
       :user/age 14}])
 #+END_SRC
 
-GIT TAG: better-testdata
+GIT BRANCH: better-testdata
 
 *REMEMBER* to transact this schema and testdata into your cleaned up
 DB!  Otherwise you'll get an error for trying to add the ~:user/email~
@@ -360,7 +360,7 @@ datomic-tutorial.core> (query1)
 #{[17592186045418] [17592186045419]}
 #+END_SRC
 
-GIT TAG: simple-first-query
+GIT BRANCH: simple-first-query
 
 Hmmm...  Okay this is kind of far from what we put in.  Below is the
 original data we trasacted into the DB:
@@ -522,7 +522,7 @@ datomic-tutorial.core> (query1)
 [[#:user{:email "sally.jones@gmail.com", :age 34}]]
 #+END_SRC
 
-GIT TAG: query-pull-filter
+GIT BRANCH: query-pull-filter
 
 * Parent Child Data
 
@@ -569,7 +569,7 @@ Let's look only at the schema for ~:cars~.  You should be able to piece
 together the other fields from previous schema examples, or just look
 at the:
 
-GIT TAG: parent-child-modeling
+GIT BRANCH: parent-child-modeling
 
 ** Many Refs Schema
 
@@ -617,7 +617,7 @@ Now let's make some testdata that can be transacted into the DB:
              {:db/id "325"}]}])
 #+END_SRC
 
-GIT TAG: parent-child-modeling
+GIT BRANCH: parent-child-modeling
 
 Now that we have some parent/child data in the DB, let's see how to
 query and display it nicely.
