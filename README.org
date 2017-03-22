@@ -163,7 +163,7 @@ create that map:
 
 #+BEGIN_SRC clojure
   (def test-data
-    [{:user/email "fenton.travers@gmail.com"}])
+    [{:user/email "fred.jones@gmail.com"}])
 #+END_SRC
 
 Let's transact this data into the DB:
