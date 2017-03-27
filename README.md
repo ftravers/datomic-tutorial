@@ -364,15 +364,15 @@ of.
 
 Here is the full query, 
 
-    (defn query1 []
+    (defn query1 [db]
       (d/q '[:find ?e
              :where
              [?e :user/email]]
-           (d/db @db-conn)))
+           db))
 
 and the result of running it:
 
-    datomic-tutorial.core> (query1)
+    datomic-tutorial.core> (query1 (-> db-url d/connect d/db))
     #{[17592186045418] [17592186045419]}
 
 GIT BRANCH: simple-first-query
@@ -403,7 +403,7 @@ actual entity that the id represents.  So datomic has a function:
 Okay that looks promising.  A bit more research on google reveals the
 following works:
 
-    datomic-tutorial.core> (map #(seq (d/entity (d/db @db-conn) (first %))) (query1))
+    datomic-tutorial.core> (map #(seq (d/entity (d/db @db-conn) (first %))) (query1 (-> db-url d/connect d/db)))
     (([:user/email "sally.jones@gmail.com"] [:user/age 34])
      ([:user/email "franklin.rosevelt@gmail.com"] [:user/age 14]))
 
@@ -423,7 +423,7 @@ we can convert that into pull syntax like so:
 
 and our output will now look like:
 
-    datomic-tutorial.core> (query1)
+    datomic-tutorial.core> (query1 (-> db-url d/connect d/db))
     [[#:user{:email "sally.jones@gmail.com", :age 34}]
      [#:user{:email "franklin.rosevelt@gmail.com", :age 14}]]
 
@@ -446,7 +446,7 @@ The pull pattern we use is: `[:user/email :user/age]`.  Here we
 declare the fields from the entity that we want returned to us.  Once
 again the result of the pull syntax:
 
-    datomic-tutorial.core> (query1)
+    datomic-tutorial.core> (query1 (-> db-url d/connect d/db))
     [[#:user{:email "sally.jones@gmail.com", :age 34}]
      [#:user{:email "franklin.rosevelt@gmail.com", :age 14}]]
 
@@ -500,17 +500,17 @@ have an age >= 21".  Great!
 
 So here is the full new query:
 
-    (defn query1 []
+    (defn query1 [db]
       (d/q '[:find (pull ?e [:user/email :user/age])
              :where
              [?e :user/age ?age]
              [(>= ?age 21)]]
-           (d/db @db-conn)))
+           db))
 
 And now we get the desired result, nicely formatted by our pull
 syntax:
 
-    datomic-tutorial.core> (query1)
+    datomic-tutorial.core> (query1 (-> db-url d/connect d/db))
     [[#:user{:email "sally.jones@gmail.com", :age 34}]]
 
 GIT BRANCH: query-pull-filter
@@ -630,12 +630,12 @@ pattern:
 retrieves the `:user/name` and `:user/age` fields from the found,
 `?e`, entity/entities.  Again the result of this look like:
 
-    datomic-tutorial.core> (query1)
+    datomic-tutorial.core> (query1 (-> db-url d/connect d/db))
     [[#:user{:name "ftravers", :age 54}]]
 
 but what we really want is something that looks like:
 
-    datomic-tutorial.core> (query1)
+    datomic-tutorial.core> (query1 (-> db-url d/connect d/db))
     [[{:user/name "ftravers",
        :user/age 54,
        :cars
