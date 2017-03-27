@@ -76,9 +76,8 @@
                 {:cars [:car/make :car/model]}])
          :where
          [?e :user/name "ftravers"]]
-       (d/db @db-conn)))
-
+       db))
 
 (query1 (-> db-url d/connect d/db))
-;; ----------------------------------------
+
 
