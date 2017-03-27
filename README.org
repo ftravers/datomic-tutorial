@@ -144,14 +144,21 @@ database!
 #+BEGIN_SRC clojure
   (def db-url "datomic:free://127.0.0.1:4334/omn-dev")
   (d/create-database db-url)
-  (def db-conn (atom (d/connect db-url)))
 #+END_SRC
 
 Now we can load this schema definition into the database by
 transacting it like so:
 
 #+BEGIN_SRC clojure
-  (d/transact @db-conn schema)
+  (d/transact (d/connect db-url) schema)
+#+END_SRC
+
+or written a bit more functionally
+
+#+BEGIN_SRC clojure
+(-> db-url
+    d/connect
+    (d/transact schema))
 #+END_SRC
 
 ** Testdata
@@ -169,7 +176,9 @@ create that map:
 Let's transact this data into the DB:
 
 #+BEGIN_SRC clojure
-(d/transact @db-conn test-data)
+(-> db-url
+    d/connect
+    (d/transact test-data))
 #+END_SRC
 
 ** Blow away and recreate DB
@@ -180,9 +189,8 @@ I know I'm starting with a clean slate each time.
 #+BEGIN_SRC clojure
   (d/delete-database db-url)
   (d/create-database db-url)
-  (reset! db-conn (d/connect db-url))
-  (d/transact @db-conn schema)
-  (d/transact @db-conn test-data)
+  (d/transact (d/connect db-url) schema)
+  (d/transact (d/connect db-url) test-data)
 #+END_SRC
 
 Here I blow it away, recreate a blank DB, recreate the connection,
