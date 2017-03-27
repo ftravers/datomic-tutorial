@@ -351,6 +351,28 @@ show later how to convert an entity-id, which is just an integer, into
 a clojure map that better reflects what that entity actually consists
 of.
 
+** Tangent, getting the database
+
+This line:
+
+#+BEGIN_SRC clojure
+(-> db-url d/connect d/db)
+#+END_SRC
+
+Is a tricky way to get the database.  It basically reads, starting
+with the the database URL, pass that to the function ~d/connect~ which
+returns a database connection, then pass that connection to the
+function ~d/db~ which returns the actual database.  The /thread first/
+~->~ saves us from having to type:
+
+#+BEGIN_SRC clojure
+(d/db (d/connect db-url))
+#+END_SRC
+
+which we kind of have to read inside out to make sense.
+
+** Back to our query, tangent over!
+
 Here is the full query, 
 
 #+BEGIN_SRC clojure

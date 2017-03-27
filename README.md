@@ -19,7 +19,9 @@
 <li><a href="#sec-3-2">3.2. Breaking down a datomic query</a></li>
 <li><a href="#sec-3-3">3.3. Datalog :where</a></li>
 <li><a href="#sec-3-4">3.4. Datalog :find</a></li>
-<li><a href="#sec-3-5">3.5. Pull Syntax</a></li>
+<li><a href="#sec-3-5">3.5. Tangent, getting the database</a></li>
+<li><a href="#sec-3-6">3.6. Back to our query, tangent over!</a></li>
+<li><a href="#sec-3-7">3.7. Pull Syntax</a></li>
 </ul>
 </li>
 <li><a href="#sec-4">4. Parent Child Data</a>
@@ -362,6 +364,24 @@ show later how to convert an entity-id, which is just an integer, into
 a clojure map that better reflects what that entity actually consists
 of.
 
+## Tangent, getting the database<a id="sec-3-5" name="sec-3-5"></a>
+
+This line:
+
+    (-> db-url d/connect d/db)
+
+Is a tricky way to get the database.  It basically reads, starting
+with the the database URL, pass that to the function `d/connect` which
+returns a database connection, then pass that connection to the
+function `d/db` which returns the actual database.  The *thread first*
+`->` saves us from having to type:
+
+    (d/db (d/connect db-url))
+
+which we kind of have to read inside out to make sense.
+
+## Back to our query, tangent over!<a id="sec-3-6" name="sec-3-6"></a>
+
 Here is the full query, 
 
     (defn query1 [db]
@@ -411,7 +431,7 @@ Okay, that is the instinctual approach to extract the data we are
 looking for, but it isn't very elegant.  Now let me introduce a more
 enlightened approach, **pull syntax**!
 
-## Pull Syntax<a id="sec-3-5" name="sec-3-5"></a>
+## Pull Syntax<a id="sec-3-7" name="sec-3-7"></a>
 
 Instead of having the find clause look like:
 
