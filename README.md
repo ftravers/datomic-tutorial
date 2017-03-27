@@ -116,6 +116,8 @@ by maps (entities) is the process of creating a datomic *schema*.
 In the SQL world, creating a schema means defining table names, column
 names and column data types.
 
+![img](doc/table.gif)
+
 In datomic, we do away with the concept of a table.  You could say
 datomic ONLY specifies 'columns'.  Additionally, these columns have no
 relationship to (or grouping with) any other column.  Contrast this
@@ -178,12 +180,17 @@ database!
 
     (def db-url "datomic:free://127.0.0.1:4334/omn-dev")
     (d/create-database db-url)
-    (def db-conn (atom (d/connect db-url)))
 
 Now we can load this schema definition into the database by
 transacting it like so:
 
-    (d/transact @db-conn schema)
+    (d/transact (d/connect db-url) schema)
+
+or written a bit more functionally
+
+    (-> db-url
+        d/connect
+        (d/transact schema))
 
 ## Testdata<a id="sec-2-4" name="sec-2-4"></a>
 
@@ -197,7 +204,9 @@ create that map:
 
 Let's transact this data into the DB:
 
-    (d/transact @db-conn test-data)
+    (-> db-url
+        d/connect
+        (d/transact test-data))
 
 ## Blow away and recreate DB<a id="sec-2-5" name="sec-2-5"></a>
 
@@ -206,9 +215,8 @@ I know I'm starting with a clean slate each time.
 
     (d/delete-database db-url)
     (d/create-database db-url)
-    (reset! db-conn (d/connect db-url))
-    (d/transact @db-conn schema)
-    (d/transact @db-conn test-data)
+    (d/transact (d/connect db-url) schema)
+    (d/transact (d/connect db-url) test-data)
 
 Here I blow it away, recreate a blank DB, recreate the connection,
 transact the schema and testdata.
