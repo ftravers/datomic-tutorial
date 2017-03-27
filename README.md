@@ -116,8 +116,6 @@ by maps (entities) is the process of creating a datomic *schema*.
 In the SQL world, creating a schema means defining table names, column
 names and column data types.
 
-![img](doc/table.gif)
-
 In datomic, we do away with the concept of a table.  You could say
 datomic ONLY specifies 'columns'.  Additionally, these columns have no
 relationship to (or grouping with) any other column.  Contrast this
